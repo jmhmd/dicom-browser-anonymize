@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>In browser DICOM anonymization</h1>
+    <section>
+      <h3>Input DICOM files</h3>
+      <input type="file" id="input-files" multiple />
+      <input type="text" id="test-file" value="/dicom/CT1_J2KR" />
+    </section>
+    <section>
+      <div id="image"></div>
+    </section>
+    <section id="log"></section>
+    <div id="memory" style="position: absolute; top: 5px; right: 5px"></div>
+
+    <script src="../src/index.ts" type="module"></script>
+  </body>
+</html>
