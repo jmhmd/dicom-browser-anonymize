@@ -1,12 +1,12 @@
 export default interface DicomDict2 {
   meta: {
-    [key: number]: {
+    [key: string]: {
       Value: any;
       vr: string;
     };
   };
   dict: {
-    [key: number]: {
+    [key: string]: {
       Value: any;
       vr: string;
     };

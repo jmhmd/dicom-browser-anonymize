@@ -7,6 +7,7 @@
     "serve": "vite preview"
   },
   "devDependencies": {
+    "@types/md5": "^2.3.1",
     "typescript": "^4.3.2",
     "vite": "^2.5.4"
   },
@@ -14,6 +15,7 @@
     "cornerstone-core": "^2.5.0",
     "cornerstone-wado-image-loader": "^4.0.0",
     "dcmjs": "^0.18.8",
-    "dicom-parser": "^1.8.8"
+    "dicom-parser": "^1.8.8",
+    "md5": "^2.3.0"
   }
 }
