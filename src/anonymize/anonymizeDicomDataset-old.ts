@@ -1,10 +1,12 @@
 import DicomDict2 from '../DicomDict2';
+import hash from './functions/hash';
+import hashdate from './functions/hashdate';
 import hashuid from './functions/hashuid';
 import { getHeaderAnonymizationRules } from './readAnonymizationScripts';
-import getParameter from './util/getParameter';
+import { emptyTag, removeTag, replaceTag } from './util/modifyTag';
 import parseParams from './util/parseParams';
 
-const implementedFunctions = ['keep', 'remove', 'empty', 'hashuid'];
+const implementedFunctions = ['keep', 'remove', 'empty', 'hashuid', 'hash', 'hashdate'];
 
 function functionIsImplemented(functionName?: string | null) {
   if (!functionName) return false;
@@ -78,7 +80,8 @@ export default async function anonymizeDicomDataset(
 
   // Loop through all elements and execute rules
   for (const tag of Object.keys(dicomDataset.dict)) {
-    const { Value: elementValue, vr: elementVr } = dicomDataset.dict[tag];
+    const { Value, vr: elementVr } = dicomDataset.dict[tag];
+    const elementValue: any | any[] = Value.length === 1 ? Value[0] : Value;
 
     // Find matching rule
     const rule = headerAnonymizationRules.find((r) => r.tag === tag);
@@ -120,33 +123,96 @@ export default async function anonymizeDicomDataset(
     if (rule?.en === 'T' && rule.value) {
       switch (functionName) {
         case 'remove': {
-          delete dicomDataset.dict[tag];
+          removeTag(dicomDataset, tag);
           break;
         }
         case 'keep': {
           break;
         }
         case 'empty': {
-          dicomDataset.upsertTag(tag, elementVr, '');
+          emptyTag(dicomDataset, tag, elementVr);
           break;
         }
         case 'hashuid': {
           try {
-            const params = parseParams(rule.value);
-            if (!params[0] || !params[1]) {
-              console.warn(`Cannot find required hashuid parameters: ${rule.value}. Skipping.`);
+            const params = parseParams(
+              rule.value,
+              [, 'ElementName'],
+              elementValue,
+              headerAnonymizationRules,
+              dicomDataset
+            );
+            const value = hashuid(params[0], params[1]);
+            replaceTag(dicomDataset, tag, elementVr, value);
+          } catch (error) {
+            console.warn(`Could not @hashuid value. Tag: ${rule.tag}. Error ${error}`);
+          }
+          break;
+        }
+        case 'hash': {
+          if (!elementValue) {
+            emptyTag(dicomDataset, tag, elementVr);
+            break;
+          }
+          try {
+            const params = parseParams(
+              rule.value,
+              ['ElementName', 'Integer'],
+              elementValue,
+              headerAnonymizationRules,
+              dicomDataset
+            );
+            const value = hash(params[0], params[1]);
+            replaceTag(dicomDataset, tag, elementVr, value);
+          } catch (error) {
+            console.warn(`Could not @hash value. Tag: ${rule.tag}. Error: ${error}`);
+          }
+          break;
+        }
+        case 'hashdate': {
+          if (!elementValue) {
+            emptyTag(dicomDataset, tag, elementVr);
+            break;
+          }
+          try {
+            const [dateString, hashDateString] = parseParams(
+              rule.value,
+              ['ElementName', 'ElementName'],
+              elementValue,
+              headerAnonymizationRules,
+              dicomDataset
+            );
+            if (!dateString || !hashDateString) {
+              console.warn(
+                `Date in header '${tag}' not set (${dateString}), or hash string not set (${hashDateString}), removing.`
+              );
+              delete dicomDataset.dict[tag];
               break;
             }
-            // If root is a script parameter, retrieve it
-            if (params[0].substr(0, 1) === '@') {
-              params[0] = getParameter(params[0], headerAnonymizationRules);
+            if (dateString.length < 8) {
+              console.warn(
+                `Date in header '${tag}' less than 8 characters/malformed (${dateString}), emptying.`
+              );
+              emptyTag(dicomDataset, tag, elementVr);
+              break;
             }
-            const value = hashuid([params[0], params[1]], elementValue, dicomDataset);
-            dicomDataset.upsertTag(tag, elementVr, value);
+            const value = hashdate(dateString, hashDateString);
+            replaceTag(dicomDataset, tag, elementVr, value);
           } catch (error) {
-            console.warn(`Could not hash value. Tag: ${rule.tag}`);
-            console.warn(error);
+            console.warn(`Could not @hash value. Tag: ${rule.tag}. Error: ${error}`);
           }
+          break;
+        }
+        case 'require': {
+          const [valueIfNotExists, defaultValue] = parseParams(
+            rule.value,
+            ['ElementName'],
+            elementValue,
+            headerAnonymizationRules,
+            dicomDataset
+          );
+          const existingElement = dicomDataset.dict[tag];
+          break;
         }
 
         default:

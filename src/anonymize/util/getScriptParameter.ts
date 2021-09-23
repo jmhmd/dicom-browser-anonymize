@@ -1,6 +1,6 @@
 import { AnonymizationRule } from '../readAnonymizationScripts';
 
-export default function getParameter(parameter: string, rules: AnonymizationRule[]) {
+export default function getScriptParameter(parameter: string, rules: AnonymizationRule[]) {
   if (parameter.substr(0, 1) !== '@') {
     throw new Error(`Parameter ${parameter} must start with '@'`);
   }

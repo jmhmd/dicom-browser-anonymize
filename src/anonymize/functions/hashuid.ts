@@ -1,40 +1,22 @@
-import DicomDict2 from '../../DicomDict2';
 import md5 from 'md5';
 import convertBase from '../util/convertBase';
-import { nameToTag } from '../dictionary';
 
-export default function hashuid(
-  [root, elementName]: [string, string],
-  elementValue: string,
-  dicomDataset: DicomDict2
-) {
+export default function hashuid(root: string = '', value: string) {
   // Append period to root if not already there.
-  if (root.substr(-1) !== '.') {
+  if (root.length > 0 && root.substr(-1) !== '.') {
     root += '.';
   }
+  root = root.trim();
 
-  // If not using current element for hash, look up other element
-  if (elementName !== 'this') {
-    const tag = nameToTag(elementName);
-    if (!tag) {
-      throw new Error(`Element ${elementName} has no corresponding numeric tag.`);
-    }
-    const element = dicomDataset.dict[tag];
-    if (!element) {
-      throw new Error(`Element ${elementName} not found in DICOM dataset.`);
-    }
-    elementValue = element.Value;
-  }
-
-  if (!elementValue) {
+  // Generate new uid
+  if (!value) {
     throw new Error(`Element for hashUID requires an existing value.`);
   }
-  const hashedUID = md5(elementValue);
+  const hashedUID = md5(value);
   const hashBase10 = convertBase(hashedUID, 64, 10);
-  if (!hashBase10 || hashBase10.length < 5) {
-    throw new Error(
-      `Error hashing the current UID. Current: ${elementValue}, hashed: ${hashBase10}`
-    );
+  const finalHash = (root + hashBase10).substr(0, 64);
+  if (!finalHash || finalHash.length < 5) {
+    throw new Error(`Error hashing the current UID. Current: ${value}, hashed: ${finalHash}`);
   }
-  return root + hashBase10;
+  return finalHash;
 }

@@ -9,7 +9,7 @@ import decompressPixelData from './decompress-pixel-data/decompressPixelData';
 import getArrayBuffer from './get-array-buffer';
 import cornerstone from 'cornerstone-core';
 import dicomParser from 'dicom-parser';
-import anonymizeDicomDataset from './anonymize/anonymizeP10Buffer';
+import anonymizeDicomDataset from './anonymize/anonymizeDicomDataset';
 
 // For use later testing multiple files
 document.getElementById('input-files')?.addEventListener('change', (event) => {
@@ -36,7 +36,7 @@ export default async function main() {
       //   meta: dcmjs.data.DicomMetaDictionary.naturalizeDataset(dicomData.meta),
       //   dict: dcmjs.data.DicomMetaDictionary.naturalizeDataset(dicomData.dict),
       // }
-      console.log(dicomData);
+      console.log(JSON.parse(JSON.stringify(dicomData)));
       logToDiv('Parsed DICOM file');
 
       // Anonymize buffer headers
@@ -44,6 +44,7 @@ export default async function main() {
         dicomData,
         '/anonymizer-scripts/dicom-anonymizer.default.script'
       );
+      console.log(anonymizedDicomData);
 
       // Decompress pixel data if necessary
       logToDiv(
@@ -58,7 +59,7 @@ export default async function main() {
       // Write decompressed pixel data to DICOM dataset, change transfer syntax
       const pixelDataArrayBuffer = getArrayBuffer(decompressedPixelData);
       anonymizedDicomData.upsertTag('7FE00010', 'OW', [pixelDataArrayBuffer]);
-      anonymizedDicomData.upsertTag('00020010', 'UI', '1.2.840.10008.1.2'); // Transfer syntax to implicit little endian
+      anonymizedDicomData.upsertTag('00020010', 'UI', ['1.2.840.10008.1.2']); // Transfer syntax to implicit little endian
       const decompressedPart10Buffer = anonymizedDicomData.write();
       logToDiv(
         `Generated new P10 buffer with decompressed pixel data, size: ${humanFileSize(

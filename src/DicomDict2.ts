@@ -7,10 +7,10 @@ export default interface DicomDict2 {
   };
   dict: {
     [key: string]: {
-      Value: any;
+      Value: any[];
       vr: string;
     };
   };
-  upsertTag: (tag: string, vr: string, value: any) => void;
+  upsertTag: (tag: string, vr: string, value: any[]) => void;
   write: () => ArrayBuffer;
 }

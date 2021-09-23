@@ -1,5 +1,3 @@
-const headerScriptRegex =
-  /(?:<p t="(\S+)">(.+)<)|(?:<e.+t="(\S+)".+n="(\S+)">(.+)<)|(?:<k.+t="(\S+)")|(?:<r.+t="(\S+)")/gm;
 const typeRegex = /<([a-z])/;
 const enRegex = /en="(\S)"/;
 const tagRegex = /t="(\S+)"/;
@@ -42,31 +40,6 @@ function parseScriptRules(script: string) {
   }
   return rules;
 }
-
-/* function getHeaderScriptRules(script: string) {
-  let m;
-  let matches: { match: string; type: string; tag: string; name?: string; value: string }[] = [];
-  while ((m = headerScriptRegex.exec(script)) !== null) {
-    // This is necessary to avoid infinite loops with zero-width matches
-    if (m.index === headerScriptRegex.lastIndex) {
-      headerScriptRegex.lastIndex++;
-    }
-
-    // The result can be accessed through the `m`-variable.
-    const [match, ptag, pvalue, etag, ename, evalue, ktag, rtag] = m;
-    const type = ptag ? 'p' : etag ? 'e' : ktag ? 'k' : rtag ? 'r' : 'unknown';
-    const tag = ptag || etag || ktag || rtag;
-    const value = pvalue || evalue;
-    matches.push({
-      match,
-      type,
-      tag,
-      name: ename,
-      value,
-    });
-  }
-  return matches;
-} */
 
 export async function getHeaderAnonymizationRules(url: string) {
   const file = await window.fetch(url);
