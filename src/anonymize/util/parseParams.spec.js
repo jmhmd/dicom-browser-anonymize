@@ -1,10 +1,17 @@
-import { AnonymizationRule, parseScriptRules } from '../readAnonymizationScripts.js';
+import { parseScriptRules } from '../readAnonymizationScripts.js';
 import parseParams from './parseParams.js';
 import fs from 'fs';
-const dcmjs: any = require('dcmjs') as any;
-import DicomDict2 from '../../DicomDict2.js';
+import dcmjs from 'dcmjs';
 
-const testRules: AnonymizationRule[] = [
+/**
+ * @typedef {import("../AnonymizationRule").AnonymizationRule} AnonymizationRule
+ * @typedef {import("../../DicomDict2").default} DicomDict2
+ */
+
+/**
+ * @type {AnonymizationRule[]}
+ */
+const testRules = [
   { line: '', type: 'e', tag: '00120062', name: 'PatientIdentityRemoved', value: '@always()YES' },
   {
     line: '',
@@ -34,8 +41,9 @@ const scriptString = fs.readFileSync(
   '../../../public/anonymizer-scripts/dicom-anonymizer.default.script'
 );
 const anonymizationRules = parseScriptRules(scriptString.toString());
-const fileArrayBuffer = fs.readFileSync('../../../public/dicom/CT_J2KR');
-const dicomData: DicomDict2 = dcmjs.data.DicomMessage.readFile(fileArrayBuffer.buffer);
+const fileArrayBuffer = fs.readFileSync('../../../public/dicom/CT1_J2KR');
+/** @type {DicomDict2} */
+const dicomData = dcmjs.data.DicomMessage.readFile(fileArrayBuffer.buffer);
 const result = parseParams(testRules[2], anonymizationRules, dicomData);
 
 console.log(result);

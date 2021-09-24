@@ -1,15 +1,22 @@
-import DicomDict2 from '../../DicomDict2';
-import { nameToTag } from './dictionary';
-import { AnonymizationRule } from '../readAnonymizationScripts';
-import getScriptParameter from './getScriptParameter';
+import { nameToTag } from './dictionary.js';
+import getScriptParameter from './getScriptParameter.js';
 
-let elementNames: string[];
+/** @type {string[]} */
+let elementNames;
 
-function resolveParams(
-  rule: AnonymizationRule,
-  anonymizationRules: AnonymizationRule[],
-  dicomDataset: DicomDict2
-) {
+/**
+ * @typedef {import("../readAnonymizationScripts.js").AnonymizationRule} AnonymizationRule
+ * @typedef {import("../../DicomDict2").default} DicomDict2
+ */
+
+/**
+ * Resolve parameters from a function string/script in the anonymization script
+ * @param {AnonymizationRule} rule Anonymization rule
+ * @param {AnonymizationRule[]} anonymizationRules All parsed anonymization rules (for looking up script parameters)
+ * @param {DicomDict2} dicomDataset Parsed dicom dataset
+ * @returns {string[]}
+ */
+function resolveParams(rule, anonymizationRules, dicomDataset) {
   if (!rule.value) {
     return [];
   }
@@ -69,23 +76,29 @@ function resolveParams(
 //   // Resolve any functions/variables in script
 // }
 
-export default function parseParams(
-  rule: AnonymizationRule,
-  anonymizationRules: AnonymizationRule[],
-  dicomDataset: DicomDict2
-) {
+/**
+ * Resolve parameters from a function string/script in the anonymization script
+ * @param {AnonymizationRule} rule Anonymization rule
+ * @param {AnonymizationRule[]} anonymizationRules All parsed anonymization rules (for looking up script parameters)
+ * @param {DicomDict2} dicomDataset Parsed dicom dataset
+ * @returns {string[]}
+ */
+export default function parseParams(rule, anonymizationRules, dicomDataset) {
   if (!rule.value) {
     throw new Error(`No function string defined for rule ${rule}`);
   }
 
   if (!elementNames) {
-    elementNames = anonymizationRules.reduce((names, rule) => {
-      if (rule.name) {
-        names.push(rule.name);
+    elementNames = anonymizationRules.reduce(
+      (names, rule) => {
+        if (rule.name) {
+          names.push(rule.name);
+          return names;
+        }
         return names;
-      }
-      return names;
-    }, [] as string[]);
+      },
+      /** @type {string[]} */ []
+    );
   }
 
   // const resolvedScripts = resolveScripts(rule, anonymizationRules, dicomDataset);

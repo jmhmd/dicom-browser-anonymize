@@ -1,18 +1,28 @@
-import DicomDict2 from '../DicomDict2';
-import { getHeaderAnonymizationRules } from './readAnonymizationScripts';
+import { fetchHeaderAnonymizationRules } from './readAnonymizationScripts';
 import { emptyTag, removeTag, replaceTag } from './util/modifyTag';
 import parseParams from './util/parseParams';
 import anonFunctions from './functions';
 import getOptionsFromScript from './util/getOptionsFromScript';
-import AnonymizerOptions from './util/AnonymizerOptions';
 import shouldPreserve from './util/shouldPreserveElement';
-import { getTagVr } from './util/dictionary';
+import { getTagVr } from './util/dictionary.js';
 import isPrivateGroup from './util/isPrivateGroup';
 
+/**
+ * @typedef { import("../DicomDict2").default } DicomDict2
+ * @typedef { import("./util/AnonymizerOptions").default } AnonymizerOptions
+ */
+
+/**
+ * Anonymize a parsed dicom dataset
+ * @param {DicomDict2} dicomDataset
+ * @param {string} anonymizationScriptUrl
+ * @param {AnonymizerOptions} passedOptions
+ * @returns {Promise<DicomDict2>}
+ */
 export default async function anonymizeDicomDataset(
-  dicomDataset: DicomDict2,
-  anonymizationScriptUrl: string,
-  passedOptions: AnonymizerOptions = {
+  dicomDataset,
+  anonymizationScriptUrl,
+  passedOptions = {
     removeUnchecked: false,
     removePrivateGroups: true,
     removeOverlays: true,
@@ -22,7 +32,7 @@ export default async function anonymizeDicomDataset(
     keepGroup0028: true,
   }
 ) {
-  const anonymizationRules = await getHeaderAnonymizationRules(anonymizationScriptUrl);
+  const anonymizationRules = await fetchHeaderAnonymizationRules(anonymizationScriptUrl);
 
   // Options from script
   const scriptOptions = getOptionsFromScript(anonymizationRules);
@@ -67,12 +77,7 @@ export default async function anonymizeDicomDataset(
     if (anonFunctionName) {
       // Process function
       try {
-        const resolvedAnonFunctionParams = parseParams(
-          rule,
-          anonFunctionName,
-          anonymizationRules,
-          dicomDataset
-        );
+        const resolvedAnonFunctionParams = parseParams(rule, anonymizationRules, dicomDataset);
 
         if (anonFunctionName === 'empty') {
           emptyTag(dicomDataset, rule.tag, datasetElement.vr);

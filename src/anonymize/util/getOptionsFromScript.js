@@ -1,6 +1,14 @@
-import { AnonymizationRule } from '../readAnonymizationScripts';
+/**
+ * @typedef {import("../AnonymizationRule").AnonymizationRule} AnonymizationRule
+ * @typedef {import("./AnonymizerOptions").default} AnonymizerOptions
+ */
 
-export default function getOptionsFromScript(rules: AnonymizationRule[]) {
+/**
+ *
+ * @param {AnonymizationRule[]} rules List of anonymization rules parsed from script
+ * @returns {AnonymizerOptions}
+ */
+export default function getOptionsFromScript(rules) {
   const keepGroup0018 = rules.find((r) => r.tag === '0018');
   const keepGroup0020 = rules.find((r) => r.tag === '0020');
   const keepGroup0028 = rules.find((r) => r.tag === '0028');

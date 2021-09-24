@@ -4,18 +4,19 @@ const tagRegex = /t="(\S+)"/;
 const nameRegex = /n="(\S+)"/;
 const valueRegex = />(.+)<\//;
 
-export interface AnonymizationRule {
-  line: string;
-  type: string;
-  en?: string | null;
-  tag: string;
-  name?: string | null;
-  value?: string | null;
-}
+/**
+ * @typedef {import("./AnonymizationRule").AnonymizationRule} AnonymizationRule
+ */
 
-export function parseScriptRules(script: string) {
+/**
+ * Parse an anonymization script
+ * @param {string} script Script string to parse
+ * @returns {AnonymizationRule[]}
+ */
+export function parseScriptRules(script) {
   const lines = script.split(/\r\n|\n\r|\n|\r/);
-  const rules: AnonymizationRule[] = [];
+  /** @type {AnonymizationRule[]} */
+  const rules = [];
   for (const line of lines) {
     if (line.trim() === '<script>' || line.trim() === '</script>' || line.length < 1) {
       continue;
@@ -41,7 +42,12 @@ export function parseScriptRules(script: string) {
   return rules;
 }
 
-export async function fetchHeaderAnonymizationRules(url: string) {
+/**
+ * Fetch an anonymization script file and parse
+ * @param {string} url Anonymization script url
+ * @returns {Promise<AnonymizationRule[]>}
+ */
+export async function fetchHeaderAnonymizationRules(url) {
   const file = await window.fetch(url);
   const xmlString = await file.text();
   const scriptRules = parseScriptRules(xmlString);

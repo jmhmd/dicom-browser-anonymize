@@ -1,7 +1,13 @@
 import { parse, addDays, format } from 'date-fns';
-import getMD5HashBase10 from '../util/getMD5hashBase10';
+import getMD5HashBase10 from '../util/getMD5HashBase10';
 
-export default function hashdate(dateValue: string, hashDateValue: string) {
+/**
+ * Shift a date
+ * @param {string} dateValue Date to be hashed
+ * @param {string} hashDateValue Value to use to create date offset
+ * @returns {string}
+ */
+export default function hashdate(dateValue, hashDateValue) {
   // Generate hash
   if (!dateValue || !hashDateValue) {
     throw new Error(

@@ -1,6 +1,12 @@
-import getMD5HashBase10 from '../util/getMD5hashBase10';
+import getMD5HashBase10 from '../util/getMD5HashBase10.js';
 
-export default function hash(value: string, maxCharsOutput: string) {
+/**
+ * Hash a string
+ * @param {string} value Value to be hashed
+ * @param {string} maxCharsOutput Max characters of output
+ * @returns {string}
+ */
+export default function hash(value, maxCharsOutput) {
   const maxChars = maxCharsOutput ? parseInt(maxCharsOutput, 10) : 64;
   // Generate hash
   if (!value) {
