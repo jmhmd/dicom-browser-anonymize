@@ -3,10 +3,7 @@
  <p t="PROFILENAME">DICOM-PS3.15E-Basic</p>
  <p t="PROJECTNAME">Project</p>
  <p t="SHORTNAME">Project</p>
- <p t="SITEID">99</p>
- <p t="SITENAME">SiteName</p>
- <p t="TRIALNAME">Trial</p>
- <p t="UIDROOT">9999</p>
+ <p t="UIDROOT">1613192914</p>
  <e en="T" t="00080005" n="SpecificCharacterSet">@keep()</e>
  <e en="F" t="00080008" n="ImageType"></e>
  <e en="T" t="00080012" n="InstanceCreationDate">@remove()</e>

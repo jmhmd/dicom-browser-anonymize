@@ -1,5 +1,4 @@
-import md5 from 'md5';
-import convertBase from '../util/convertBase';
+import getMD5HashBase10 from '../util/getMD5hashBase10';
 
 export default function hash(value: string, maxCharsOutput: string) {
   const maxChars = maxCharsOutput ? parseInt(maxCharsOutput, 10) : 64;
@@ -7,8 +6,8 @@ export default function hash(value: string, maxCharsOutput: string) {
   if (!value) {
     throw new Error(`Hash requires an existing value.`);
   }
-  const hashedUID = md5(value);
-  const hashBase10 = convertBase(hashedUID, 64, 10);
+
+  const hashBase10 = getMD5HashBase10(value);
   if (!hashBase10) {
     throw new Error(`Hash returned null.`);
   }

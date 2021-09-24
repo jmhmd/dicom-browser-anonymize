@@ -13,7 +13,7 @@ export interface AnonymizationRule {
   value?: string | null;
 }
 
-function parseScriptRules(script: string) {
+export function parseScriptRules(script: string) {
   const lines = script.split(/\r\n|\n\r|\n|\r/);
   const rules: AnonymizationRule[] = [];
   for (const line of lines) {
@@ -41,7 +41,7 @@ function parseScriptRules(script: string) {
   return rules;
 }
 
-export async function getHeaderAnonymizationRules(url: string) {
+export async function fetchHeaderAnonymizationRules(url: string) {
   const file = await window.fetch(url);
   const xmlString = await file.text();
   const scriptRules = parseScriptRules(xmlString);

@@ -1,8 +1,5 @@
 import DicomDict2 from '../DicomDict2';
-import hash from './functions/hash';
-import hashdate from './functions/hashdate';
-import hashuid from './functions/hashuid';
-import { AnonymizationRule, getHeaderAnonymizationRules } from './readAnonymizationScripts';
+import { getHeaderAnonymizationRules } from './readAnonymizationScripts';
 import { emptyTag, removeTag, replaceTag } from './util/modifyTag';
 import parseParams from './util/parseParams';
 import anonFunctions from './functions';
@@ -15,12 +12,7 @@ import isPrivateGroup from './util/isPrivateGroup';
 export default async function anonymizeDicomDataset(
   dicomDataset: DicomDict2,
   anonymizationScriptUrl: string,
-  passedOptions: AnonymizerOptions
-) {
-  const anonymizationRules = await getHeaderAnonymizationRules(anonymizationScriptUrl);
-
-  // Default global options
-  const defaultOptions: AnonymizerOptions = {
+  passedOptions: AnonymizerOptions = {
     removeUnchecked: false,
     removePrivateGroups: true,
     removeOverlays: true,
@@ -28,21 +20,19 @@ export default async function anonymizeDicomDataset(
     keepGroup0018: true,
     keepGroup0020: true,
     keepGroup0028: true,
-  };
+  }
+) {
+  const anonymizationRules = await getHeaderAnonymizationRules(anonymizationScriptUrl);
+
   // Options from script
   const scriptOptions = getOptionsFromScript(anonymizationRules);
   // Set final options
-  const options = Object.assign(defaultOptions, scriptOptions, passedOptions);
+  const options = Object.assign(scriptOptions, passedOptions);
 
   // Loop through all element rules and execute
-  for (const rule of anonymizationRules.filter((r) => r.type === 'e')) {
+  const elementRules = anonymizationRules.filter((r) => r.type === 'e');
+  for (const rule of elementRules) {
     let datasetElement = dicomDataset.dict[rule.tag];
-    if (!datasetElement) {
-      console.log(`Tag ${rule.tag} not contained in dicom dataset.`);
-      continue;
-    }
-    const datasetValue =
-      datasetElement.Value.length === 1 ? datasetElement.Value[0] : datasetElement.Value;
 
     // If rule not enabled (unchecked), remove or skip depending on option setting
     if (rule.en !== 'T') {
@@ -66,10 +56,23 @@ export default async function anonymizeDicomDataset(
       continue;
     }
 
+    // TODO: Implement @require to add elements that don't exist
+    if (!datasetElement && ['append', 'require', 'always']) {
+      console.log(`Tag ${rule.tag} not contained in dicom dataset.`);
+      continue;
+    }
+    const datasetValue =
+      datasetElement.Value.length === 1 ? datasetElement.Value[0] : datasetElement.Value;
+
     if (anonFunctionName) {
       // Process function
       try {
-        const resolvedAnonFunctionParams = parseParams(rule, anonymizationRules, dicomDataset);
+        const resolvedAnonFunctionParams = parseParams(
+          rule,
+          anonFunctionName,
+          anonymizationRules,
+          dicomDataset
+        );
 
         if (anonFunctionName === 'empty') {
           emptyTag(dicomDataset, rule.tag, datasetElement.vr);
@@ -88,7 +91,7 @@ export default async function anonymizeDicomDataset(
         if (anonFunctionName === 'hashuid') {
           if (!datasetValue) {
             emptyTag(dicomDataset, rule.tag, datasetElement.vr);
-            break;
+            continue;
           }
           const [root, value] = resolvedAnonFunctionParams;
           const newValue = anonFunctions.hashuid(root, value);
@@ -99,7 +102,7 @@ export default async function anonymizeDicomDataset(
         if (anonFunctionName === 'hash') {
           if (!datasetValue) {
             emptyTag(dicomDataset, rule.tag, datasetElement.vr);
-            break;
+            continue;
           }
           const [value, maxChars] = resolvedAnonFunctionParams;
           const newValue = anonFunctions.hash(value, maxChars);
@@ -110,7 +113,7 @@ export default async function anonymizeDicomDataset(
         if (anonFunctionName === 'hashdate') {
           if (!datasetValue) {
             emptyTag(dicomDataset, rule.tag, datasetElement.vr);
-            break;
+            continue;
           }
           const [dateValue, hashDateValue] = resolvedAnonFunctionParams;
           const newValue = anonFunctions.hashdate(dateValue, hashDateValue);
@@ -127,6 +130,9 @@ export default async function anonymizeDicomDataset(
           const newElementVr = getTagVr(rule.tag);
           const newElementValue = valueIfNotExists || defaultValue || '';
           replaceTag(dicomDataset, rule.tag, newElementVr, newElementValue);
+        }
+
+        if (anonFunctionName === 'append') {
         }
 
         console.warn(

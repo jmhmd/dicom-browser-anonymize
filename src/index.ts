@@ -58,8 +58,9 @@ export default async function main() {
 
       // Write decompressed pixel data to DICOM dataset, change transfer syntax
       const pixelDataArrayBuffer = getArrayBuffer(decompressedPixelData);
+      anonymizedDicomData.meta['00020010'].Value = ['1.2.840.10008.1.2']; // Transfer syntax to implicit little endian
+      // anonymizedDicomData.upsertTag('00020010', 'UI', ['1.2.840.10008.1.2']); // Transfer syntax to implicit little endian
       anonymizedDicomData.upsertTag('7FE00010', 'OW', [pixelDataArrayBuffer]);
-      anonymizedDicomData.upsertTag('00020010', 'UI', ['1.2.840.10008.1.2']); // Transfer syntax to implicit little endian
       const decompressedPart10Buffer = anonymizedDicomData.write();
       logToDiv(
         `Generated new P10 buffer with decompressed pixel data, size: ${humanFileSize(
@@ -79,6 +80,16 @@ export default async function main() {
       const byteArray = new Uint8Array(decompressedPart10Buffer);
       dicomParser.parseDicom(byteArray);
       logToDiv('Successfully parsed generated P10 buffer');
+
+      // Make file available for download
+      document.getElementById('download-file')?.addEventListener('click', () => {
+        var blob = new Blob([decompressedPart10Buffer], { type: 'application/dicom' });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        var fileName = 'anonymized-dicom-file';
+        link.download = fileName;
+        link.click();
+      });
     } catch (err) {
       logToDiv('Failed to process DICOM');
       console.error(err);

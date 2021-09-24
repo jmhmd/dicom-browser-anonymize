@@ -1,6 +1,5 @@
-import md5 from 'md5';
-import convertBase from '../util/convertBase';
 import { parse, addDays, format } from 'date-fns';
+import getMD5HashBase10 from '../util/getMD5hashBase10';
 
 export default function hashdate(dateValue: string, hashDateValue: string) {
   // Generate hash
@@ -12,8 +11,8 @@ export default function hashdate(dateValue: string, hashDateValue: string) {
   if (dateValue.length < 8) {
     throw new Error(`Date in header less than 8 characters/malformed (${dateValue}).`);
   }
-  const hashed = md5(hashDateValue);
-  let hashBase10 = convertBase(hashed, 64, 10);
+
+  let hashBase10 = getMD5HashBase10(hashDateValue);
   if (!hashBase10) {
     throw new Error(`Hash returned null.`);
   }
@@ -22,7 +21,7 @@ export default function hashdate(dateValue: string, hashDateValue: string) {
     hashBase10 = hashBase10.substring(hashBase10.length - 4);
   }
 
-  let inc = parseInt(hashBase10);
+  let inc = parseInt(hashBase10, 10);
   inc = -1 * (inc % (10 * 365));
 
   const date = parse(dateValue, 'yyyyMMdd', new Date());
