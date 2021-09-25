@@ -2,6 +2,8 @@
  * @typedef {import("../../DicomDict2").default} DicomDict2
  */
 
+import { getTagVr } from './dictionary';
+
 /**
  * Remove a tag from the DICOM dataset
  * @param {DicomDict2} dicomDataset Parsed DICOM dataset
@@ -39,4 +41,19 @@ export function replaceTag(dicomDataset, tag, vr, value) {
   }
   dicomDataset.upsertTag(tag, vr, value);
   return;
+}
+
+/**
+ *
+ * @param {DicomDict2} dicomDataset
+ * @param {string} tag
+ * @param {any} value
+ * @returns {void}
+ */
+export function addTag(dicomDataset, tag, value) {
+  const vr = getTagVr(tag);
+  if (!vr) {
+    throw new Error(`Could not find matching entry in dictionary for tag ${tag}`);
+  }
+  replaceTag(dicomDataset, tag, vr, value);
 }

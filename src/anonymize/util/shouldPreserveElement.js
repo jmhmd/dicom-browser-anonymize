@@ -2,7 +2,7 @@ import isPrivateGroup from './isPrivateGroup';
 
 /**
  * @typedef {import("../AnonymizationRule").AnonymizationRule} AnonymizationRule
- * @typedef {import("./AnonymizerOptions").default} AnonymizerOptions
+ * @typedef {import("../AnonymizerOptions").default} AnonymizerOptions
  */
 
 /**

@@ -6,10 +6,11 @@ import getOptionsFromScript from './util/getOptionsFromScript';
 import shouldPreserve from './util/shouldPreserveElement';
 import { getTagVr } from './util/dictionary.js';
 import isPrivateGroup from './util/isPrivateGroup';
+import resolveScriptString from './resolveScriptString';
 
 /**
  * @typedef { import("../DicomDict2").default } DicomDict2
- * @typedef { import("./util/AnonymizerOptions").default } AnonymizerOptions
+ * @typedef { import("./AnonymizerOptions").default } AnonymizerOptions
  */
 
 /**
@@ -23,7 +24,8 @@ export default async function anonymizeDicomDataset(
   dicomDataset,
   anonymizationScriptUrl,
   passedOptions = {
-    removeUnchecked: false,
+    removeDisabled: false,
+    sequenceAction: 'remove',
     removePrivateGroups: true,
     removeOverlays: true,
     removeCurves: true,
@@ -77,8 +79,6 @@ export default async function anonymizeDicomDataset(
     if (anonFunctionName) {
       // Process function
       try {
-        const resolvedAnonFunctionParams = parseParams(rule, anonymizationRules, dicomDataset);
-
         if (anonFunctionName === 'empty') {
           emptyTag(dicomDataset, rule.tag, datasetElement.vr);
           continue;
@@ -94,6 +94,7 @@ export default async function anonymizeDicomDataset(
         }
 
         if (anonFunctionName === 'hashuid') {
+          const resolvedAnonFunctionParams = parseParams(rule, anonymizationRules, dicomDataset);
           if (!datasetValue) {
             emptyTag(dicomDataset, rule.tag, datasetElement.vr);
             continue;
@@ -105,6 +106,7 @@ export default async function anonymizeDicomDataset(
         }
 
         if (anonFunctionName === 'hash') {
+          const resolvedAnonFunctionParams = parseParams(rule, anonymizationRules, dicomDataset);
           if (!datasetValue) {
             emptyTag(dicomDataset, rule.tag, datasetElement.vr);
             continue;
@@ -116,6 +118,7 @@ export default async function anonymizeDicomDataset(
         }
 
         if (anonFunctionName === 'hashdate') {
+          const resolvedAnonFunctionParams = parseParams(rule, anonymizationRules, dicomDataset);
           if (!datasetValue) {
             emptyTag(dicomDataset, rule.tag, datasetElement.vr);
             continue;
@@ -127,6 +130,7 @@ export default async function anonymizeDicomDataset(
         }
 
         if (anonFunctionName === 'require') {
+          const resolvedAnonFunctionParams = parseParams(rule, anonymizationRules, dicomDataset);
           const [valueIfNotExists, defaultValue] = resolvedAnonFunctionParams;
           const existingElement = dicomDataset.dict[rule.tag];
           if (existingElement) {
@@ -137,7 +141,15 @@ export default async function anonymizeDicomDataset(
           replaceTag(dicomDataset, rule.tag, newElementVr, newElementValue);
         }
 
-        if (anonFunctionName === 'append') {
+        if (anonFunctionName === 'always') {
+          const [, scriptString] = rule.value.match(/@always\(\)(.+)<\//) || [];
+          if (!scriptString) {
+            console.warn(
+              `Rule '@always' for tag ${rule.tag} did not have a matching script. Emptying tag for safety`
+            );
+            emptyTag(dicomDataset, rule.tag, datasetElement.vr);
+          }
+          const resolvedScriptString = resolveScriptString;
         }
 
         console.warn(

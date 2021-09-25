@@ -1,5 +1,8 @@
+type SequenceAction = 'remove' | 'process';
+
 export default interface AnonymizerOptions {
-  removeUnchecked: boolean;
+  sequenceAction: SequenceAction;
+  removeDisabled: boolean;
   removePrivateGroups: boolean;
   removeOverlays: boolean;
   removeCurves: boolean;
