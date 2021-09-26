@@ -15,11 +15,11 @@ import resolveOperation from './util/resolveOperation';
  */
 export default function processRule(rule, script, dicomDataset) {
   const options = script.options;
-  const { tag, operation } = rule;
+  const { tag } = rule;
   const datasetElement = dicomDataset.dict[tag] || dicomDataset.meta[tag];
 
   if (!rule.enabled) {
-    if (options.removeUnchecked) {
+    if (options.removeDisabled) {
       removeTag(dicomDataset, tag);
     } else {
       return false;
@@ -66,7 +66,12 @@ export default function processRule(rule, script, dicomDataset) {
 
   if (resolvedOperation === 'append') {
     let newValue;
-    if (!dicom)
+    if (!datasetElement) {
+      newValue = value;
+    } else {
+      newValue = datasetElement.Value.push(value);
+    }
+    replaceTag(dicomDataset, tag, datasetElement.vr, newValue);
   }
 
   throw new Error(`No valid operation for tag "${tag}"`);

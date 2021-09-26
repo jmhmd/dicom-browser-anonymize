@@ -5,10 +5,8 @@
 // Patient Name and Patient ID are hashed in this default script
 // All PRIVATE TAGS Removed
 
-export default basicScript;
-
 /**
- * @type {import('../../src/anonymize/Script').default}
+ * @type {import('../Script').default}
  */
 const basicScript = {
   variables: [
@@ -28,19 +26,19 @@ const basicScript = {
       enabled: true,
       tag: '00001001',
       name: 'RequestedSOPInstanceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '00020003',
       name: 'MediaStorageSOPInstanceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '00041511',
       name: 'ReferencedSOPInstanceUIDinFile',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -52,13 +50,13 @@ const basicScript = {
       enabled: true,
       tag: '00080014',
       name: 'InstanceCreatorUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '00080018',
       name: 'SOPInstanceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -142,13 +140,13 @@ const basicScript = {
       enabled: true,
       tag: '00080050',
       name: 'AccessionNumber',
-      operation: { operationName: 'hash', parameters: ['this', '16'] },
+      operation: { operationName: 'hash', operationParameters: ['this', '16'] },
     },
     {
       enabled: true,
       tag: '00080058',
       name: 'FailedSOPInstanceUIDList',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -202,7 +200,7 @@ const basicScript = {
       enabled: true,
       tag: '0008010d',
       name: 'ContextGroupExtensionCreatorUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -334,13 +332,13 @@ const basicScript = {
       enabled: true,
       tag: '00081155',
       name: 'RefSOPInstanceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '00081195',
       name: 'TransactionUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -358,7 +356,7 @@ const basicScript = {
       enabled: true,
       tag: '00083010',
       name: 'IrradiationEventUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -370,19 +368,19 @@ const basicScript = {
       enabled: true,
       tag: '00089123',
       name: 'CreatorVersionUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '00100010',
       name: 'PatientName',
-      operation: { operationName: 'hash', parameters: ['this', ' 64'] },
+      operation: { operationName: 'hash', operationParameters: ['this', ' 64'] },
     },
     {
       enabled: true,
       tag: '00100020',
       name: 'PatientID',
-      operation: { operationName: 'hash', parameters: ['this', ' 64'] },
+      operation: { operationName: 'hash', operationParameters: ['this', ' 64'] },
     },
     {
       enabled: true,
@@ -617,17 +615,17 @@ const basicScript = {
         operationName: 'always',
         operationParameters: [
           {
-            operation: 'append',
-            operationParameters: ['Per DICOM PS 3.15 AnnexE. Details in 0012,0064'],
+            operationName: 'append',
+            operationParameters: ['DICOM-PS3.15E-Basic'],
           },
         ],
       },
     },
     {
-      enabled: true,
+      enabled: false,
       tag: '00120064',
       name: 'DeIdentificationMethodCodeSequence',
-      operation: '113100',
+      operation: { operationName: 'deidmethodcodeseq', operationParameters: ['113100'] },
     },
     {
       enabled: true,
@@ -651,7 +649,7 @@ const basicScript = {
       enabled: true,
       tag: '00181002',
       name: 'DeviceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -753,13 +751,13 @@ const basicScript = {
       enabled: true,
       tag: '0020000d',
       name: 'StudyInstanceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '0020000e',
       name: 'SeriesInstanceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -771,13 +769,13 @@ const basicScript = {
       enabled: true,
       tag: '00200052',
       name: 'FrameOfReferenceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '00200200',
       name: 'SynchronizationFrameOfReferenceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -813,13 +811,13 @@ const basicScript = {
       enabled: true,
       tag: '00209161',
       name: 'ConcatenationUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '00209164',
       name: 'DimensionOrganizationUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -840,13 +838,13 @@ const basicScript = {
       enabled: true,
       tag: '00281199',
       name: 'PaletteColorLUTUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '00281214',
       name: 'LargePaletteColorLUTUid',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -1260,7 +1258,7 @@ const basicScript = {
       enabled: true,
       tag: '00404023',
       name: 'RefGenPurposeSchedProcStepTransUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -1356,7 +1354,7 @@ const basicScript = {
       enabled: true,
       tag: '0040a124',
       name: 'UID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -1368,13 +1366,13 @@ const basicScript = {
       enabled: true,
       tag: '0040db0c',
       name: 'TemplateExtensionOrganizationUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '0040db0d',
       name: 'TemplateExtensionCreatorUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -1404,13 +1402,13 @@ const basicScript = {
       enabled: true,
       tag: '0070031a',
       name: 'FiducialUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '00880140',
       name: 'StorageMediaFilesetUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -1494,19 +1492,19 @@ const basicScript = {
       enabled: true,
       tag: '30060024',
       name: 'ReferencedFrameOfReferenceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '300600c2',
       name: 'RelatedFrameOfReferenceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
       tag: '300a0013',
       name: 'DoseReferenceUID',
-      operation: { operationName: 'hashuid', parameters: ['@UIDROOT', 'this'] },
+      operation: { operationName: 'hashuid', operationParameters: ['@UIDROOT', 'this'] },
     },
     {
       enabled: true,
@@ -1624,9 +1622,15 @@ const basicScript = {
     },
   ],
   options: {
-    removeUnchecked: false,
+    sequenceAction: 'remove',
+    removeDisabled: false,
     removePrivateGroups: true,
     removeOverlays: true,
     removeCurves: true,
+    keepGroup0018: true,
+    keepGroup0020: true,
+    keepGroup0028: true,
   },
 };
+
+export default basicScript;

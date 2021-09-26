@@ -2,12 +2,12 @@ import isPrivateGroup from './isPrivateGroup';
 
 /**
  * @typedef {import("../AnonymizationRule").AnonymizationRule} AnonymizationRule
- * @typedef {import("../AnonymizerOptions").default} AnonymizerOptions
+ * @typedef {import("../Script").ScriptOptions} ScriptOptions
  */
 
 /**
  *
- * @param {AnonymizerOptions} options Options for the anonymizer
+ * @param {ScriptOptions} options Options for the anonymizer
  * @param {string} tag DICOM tag to check
  * @param {AnonymizationRule} [rule] Optional rule provided in case of override
  * @returns

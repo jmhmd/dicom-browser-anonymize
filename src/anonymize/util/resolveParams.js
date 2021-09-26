@@ -2,9 +2,6 @@ import { nameToTag } from './dictionary.js';
 import getScriptParameter from './getScriptParameter.js';
 import resolveOperation from './resolveOperation.js';
 
-/** @type {string[]} */
-let elementNames;
-
 /**
  * @typedef {import('../Script').default} Script
  * @typedef {import('../Script').ScriptRule} Rule
@@ -13,7 +10,7 @@ let elementNames;
 
 /**
  *
- * @param {Rule["operation"]["operationParameters"][0]} param
+ * @param {import('../Script').OperationParameter} param
  * @param {Rule} rule
  * @param {Script} script
  * @param {DicomDict2} dicomDataset
@@ -56,7 +53,7 @@ function resolveParam(param, rule, script, dicomDataset) {
 export function resolveParams(rule, script, dicomDataset) {
   const { operationParameters } = rule.operation;
   if (!operationParameters || !Array.isArray(operationParameters)) {
-    throw new Error('Operation parameters must be an array');
+    return [];
   }
   if (operationParameters.length === 0) {
     return [];

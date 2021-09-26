@@ -10,6 +10,7 @@ import getArrayBuffer from './get-array-buffer';
 import cornerstone from 'cornerstone-core';
 import dicomParser from 'dicom-parser';
 import anonymizeDicomDataset from './anonymize/anonymizeDicomDataset';
+import defaultScript from './anonymize/scripts/header-script.default';
 
 // For use later testing multiple files
 document.getElementById('input-files')?.addEventListener('change', (event) => {
@@ -40,10 +41,8 @@ export default async function main() {
       logToDiv('Parsed DICOM file');
 
       // Anonymize buffer headers
-      const anonymizedDicomData = await anonymizeDicomDataset(
-        dicomData,
-        '/anonymizer-scripts/dicom-anonymizer.default.script'
-      );
+      const anonymizationScript = defaultScript;
+      const anonymizedDicomData = await anonymizeDicomDataset(dicomData, anonymizationScript);
       console.log(anonymizedDicomData);
 
       // Decompress pixel data if necessary

@@ -32,10 +32,20 @@ export default function resolveOperation(rule, script, dicomDataset) {
     return ['remove'];
   }
 
+  // if (operationName === 'deidmethodcodeseq') {
+  //   const [...codeSeqs] = resolveParams(rule, script, dicomDataset);
+  //   const sequenceMembers = codeSeqs.map(codeSeq => {
+
+  //   })
+  //   return ['append']
+  // }
+
   if (operationName === 'hashuid') {
     const [root, valueToHash] = resolveParams(rule, script, dicomDataset);
     if (!root || typeof root !== 'string' || !valueToHash || typeof valueToHash !== 'string') {
-      throw new Error(`Both parameters for "hashuid" must be a string. Rule ${rule}`);
+      throw new Error(
+        `Both parameters for "hashuid" must be a string. Rule ${JSON.stringify(rule)}`
+      );
     }
     const newValue = anonFunctions.hashuid(root, valueToHash);
     return ['upsert', newValue];
@@ -44,11 +54,13 @@ export default function resolveOperation(rule, script, dicomDataset) {
   if (operationName === 'hash') {
     const [valueToHash, maxChars] = resolveParams(rule, script, dicomDataset);
     if (!valueToHash || typeof valueToHash !== 'string') {
-      throw new Error(`No value resolved for hash function. Rule: ${rule}`);
+      throw new Error(`No value resolved for hash function. Rule: ${JSON.stringify(rule)}`);
     }
     if (maxChars && typeof maxChars !== 'string') {
       throw new Error(
-        `Optional second parameter for hash function must be numeric string. Rule: ${rule}`
+        `Optional second parameter for hash function must be numeric string. Rule: ${JSON.stringify(
+          rule
+        )}`
       );
     }
     const newValue = anonFunctions.hash(valueToHash, maxChars);
@@ -63,10 +75,30 @@ export default function resolveOperation(rule, script, dicomDataset) {
       typeof dateToIncrement !== 'string' ||
       typeof valueToHashForIncrement !== 'string'
     ) {
-      throw new Error(`Two element name parameters required for "hashdate". Rule ${rule}`);
+      throw new Error(
+        `Two element name parameters required for "hashdate". Rule ${JSON.stringify(rule)}`
+      );
     }
     const newValue = anonFunctions.hashdate(dateToIncrement, valueToHashForIncrement);
     return ['upsert', newValue];
+  }
+
+  if (operationName === 'date') {
+    const [separator] = resolveParams(rule, script, dicomDataset);
+    if (typeof separator !== 'string' && separator !== undefined) {
+      throw new Error(`Separator parameter must be a string. Rule: ${JSON.stringify(rule)}`);
+    }
+    const newDate = anonFunctions.date(separator);
+    return ['upsert', newDate];
+  }
+
+  if (operationName === 'time') {
+    const [separator] = resolveParams(rule, script, dicomDataset);
+    if (typeof separator !== 'string' && separator !== undefined) {
+      throw new Error(`Separator parameter must be a string. Rule: ${JSON.stringify(rule)}`);
+    }
+    const newDate = anonFunctions.time(separator);
+    return ['upsert', newDate];
   }
 
   if (operationName === 'require') {
@@ -77,7 +109,7 @@ export default function resolveOperation(rule, script, dicomDataset) {
     }
     const newElementValue = valueIfNotExists || defaultValue || '';
     if (typeof newElementValue !== 'string') {
-      throw new Error(`New value for element must be a string. Rule: ${rule}`);
+      throw new Error(`New value for element must be a string. Rule: ${JSON.stringify(rule)}`);
     }
     return ['upsert', newElementValue];
   }
@@ -85,9 +117,19 @@ export default function resolveOperation(rule, script, dicomDataset) {
   if (operationName === 'always') {
     const [newValue] = resolveParams(rule, script, dicomDataset);
     if (typeof newValue !== 'string') {
-      throw new Error(`Parameter for 'always' did not evaluate to a string. Rule ${rule}`);
+      throw new Error(
+        `Parameter for 'always' did not evaluate to a string. Rule ${JSON.stringify(rule)}`
+      );
     }
     return ['upsert', newValue];
+  }
+
+  if (operationName === 'param') {
+    const [paramValue] = resolveParams(rule, script, dicomDataset);
+    if (typeof paramValue !== 'string') {
+      throw new Error(`Parameter for 'param' must be a string. Rule ${JSON.stringify(rule)}`);
+    }
+    return ['upsert', paramValue];
   }
 
   console.warn(

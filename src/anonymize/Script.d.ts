@@ -8,13 +8,18 @@ type OperationName =
   | 'require'
   | 'always'
   | 'append'
-  | 'contents';
+  | 'contents'
+  | 'date'
+  | 'time'
+  | 'param'
+  | 'deidmethodcodeseq';
+
+type OperationParameter = 'this' | string | Operation;
 
 interface Operation {
   operationName: OperationName;
-  operationParameters: OperationParameter[];
+  operationParameters?: OperationParameter[];
 }
-type OperationParameter = 'this' | string | Operation;
 
 export interface ScriptVariable {
   name: string;
@@ -22,7 +27,8 @@ export interface ScriptVariable {
 }
 
 export interface ScriptOptions {
-  removeUnchecked: boolean;
+  sequenceAction: string;
+  removeDisabled: boolean;
   removePrivateGroups: boolean;
   removeOverlays: boolean;
   removeCurves: boolean;
