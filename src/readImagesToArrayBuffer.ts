@@ -28,4 +28,5 @@ export default async function readImagesToArrayBuffer(files: FileList) {
       })
       .filter((result): result is ArrayBuffer => result instanceof ArrayBuffer);
   });
+  return fileArrayBuffers;
 }

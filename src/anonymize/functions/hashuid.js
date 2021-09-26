@@ -1,6 +1,15 @@
-import getMD5HashBase10 from '../util/getMD5hashBase10';
+import getMD5HashBase10 from '../util/getMD5HashBase10';
 
-export default function hashuid(root: string = '', value: string) {
+/**
+ *
+ * @param {string} root Prefix for the uid
+ * @param {string} value Value to be hashed
+ * @returns
+ */
+export default function hashuid(root, value) {
+  if (!root || typeof root !== 'string') {
+    throw new Error('Root parameter for "hashuid" must be a string.');
+  }
   // Append period to root if not already there.
   if (root.length > 0 && root.substr(-1) !== '.') {
     root += '.';

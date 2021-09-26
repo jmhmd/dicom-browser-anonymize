@@ -1,12 +1,18 @@
-import AnonymizerOptions from './AnonymizerOptions';
-import { AnonymizationRule } from '../readAnonymizationScripts';
 import isPrivateGroup from './isPrivateGroup';
 
-export default function shouldPreserve(
-  options: AnonymizerOptions,
-  tag: string,
-  rule?: AnonymizationRule
-) {
+/**
+ * @typedef {import("../AnonymizationRule").AnonymizationRule} AnonymizationRule
+ * @typedef {import("../Script").ScriptOptions} ScriptOptions
+ */
+
+/**
+ *
+ * @param {ScriptOptions} options Options for the anonymizer
+ * @param {string} tag DICOM tag to check
+ * @param {AnonymizationRule} [rule] Optional rule provided in case of override
+ * @returns
+ */
+export default function shouldPreserve(options, tag, rule) {
   if (rule?.value === '@keep()') return true;
   // The SOP Class UID: 00080016
   // The SOP Instance UID: 00080018
