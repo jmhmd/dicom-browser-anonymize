@@ -1,4 +1,4 @@
-import { nameToTag } from './dictionary.js';
+import { nameToTag } from './dicomDictionary.js';
 import getScriptParameter from './getScriptParameter.js';
 import resolveOperation from './resolveOperation.js';
 

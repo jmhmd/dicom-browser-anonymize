@@ -2,7 +2,7 @@
  * @typedef {import("../../DicomDict2").default} DicomDict2
  */
 
-import { getTagVr } from './dictionary';
+import { getTagVr } from './dicomDictionary.js';
 
 /**
  * Remove a tag from the DICOM dataset
