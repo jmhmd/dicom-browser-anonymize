@@ -1,44 +1,71 @@
 import humanFileSize from './humanFileSize';
 import logToDiv from './logToDiv';
-import fetchImageToArrayBuffer from './fetchImageToArrayBuffer';
 import monitorMemory from './monitorMemory';
 import dcmjs from 'dcmjs';
 import DicomDict2 from './DicomDict2';
 import knownTransferSyntax from './knownTransferSyntax';
-import decompressPixelData from './decompress-pixel-data/decompressPixelData';
 import getArrayBuffer from './get-array-buffer';
 import cornerstone from 'cornerstone-core';
+import cornerstoneWADOImageLoader from 'cornerstone-wado-image-loader';
 import dicomParser from 'dicom-parser';
 import anonymizeDicomDataset from './anonymize/anonymizeDicomDataset';
 import defaultScript from './anonymize/scripts/header-script.default';
+
+cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+cornerstoneWADOImageLoader.configure();
+
+cornerstoneWADOImageLoader.webWorkerManager.initialize({
+  maxWebWorkers: 4,
+  startWebWorkersOnDemand: true,
+  webWorkerTaskPaths: [],
+  taskConfiguration: {
+    decodeTask: {
+      initializeCodecsOnStartup: true,
+      strict: true,
+    },
+  },
+});
 
 // For use later testing multiple files
 document.getElementById('input-files')?.addEventListener('change', (event) => {
   const fileList = (event.target as HTMLInputElement).files;
 });
 
-export default async function main() {
-  const fileUrlInput = document.getElementById('test-file');
-  const fileUrl = (fileUrlInput as HTMLInputElement).value;
-  const fileArrayBuffers: ArrayBuffer[] = [];
+export default async function loadImages(imageSources: { urls?: string[]; files?: FileList }) {
+  const { urls, files } = imageSources;
+  let cornerstoneImageObjects: any[] = [];
 
-  if (fileUrl) {
-    fileArrayBuffers[0] = await fetchImageToArrayBuffer(fileUrl);
-    logToDiv(`Fetched file, size: ${humanFileSize(fileArrayBuffers[0].byteLength)}`);
+  if (urls) {
+    for (const url of urls) {
+      const imageId = `wadouri:${url}`;
+      const image = await cornerstone.loadImage(imageId);
+      image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
+      image.decompressedPixelData = image.imageFrame.pixelData;
+      cornerstoneImageObjects.push(image);
+    }
   }
-  for (const fileArrayBuffer of fileArrayBuffers) {
+  if (files) {
+    for (const file of Array.from(files)) {
+      const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+      const image = await cornerstone.loadImage(imageId);
+      image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
+      image.decompressedPixelData = image.imageFrame.pixelData;
+      cornerstoneImageObjects.push(image);
+    }
+  }
+
+  for (const [index, image] of cornerstoneImageObjects.entries()) {
+    logToDiv(`Processing image ${index + 1} of ${cornerstoneImageObjects.length}`);
     let dicomData: DicomDict2;
+    const { dicomP10ArrayBuffer, decompressedPixelData } = image;
 
     try {
       // Parse DICOM
       console.time('parse');
-      dicomData = dcmjs.data.DicomMessage.readFile(fileArrayBuffer);
+      dicomData = dcmjs.data.DicomMessage.readFile(dicomP10ArrayBuffer);
       console.timeEnd('parse');
 
-      // const naturalizedDicomData: NamedDicomDict = {
-      //   meta: dcmjs.data.DicomMetaDictionary.naturalizeDataset(dicomData.meta),
-      //   dict: dcmjs.data.DicomMetaDictionary.naturalizeDataset(dicomData.dict),
-      // }
       console.log(JSON.parse(JSON.stringify(dicomData)));
       logToDiv('Parsed DICOM file');
 
@@ -53,10 +80,6 @@ export default async function main() {
       logToDiv(
         `Transfer syntax: ${knownTransferSyntax(anonymizedDicomData.meta['00020010'].Value[0])}`
       );
-      console.time('decompress');
-      const image = await decompressPixelData(fileArrayBuffer);
-      console.timeEnd('decompress');
-      const { pixelData: decompressedPixelData } = image.imageFrame;
       logToDiv(
         `Decompressed image, size: ${humanFileSize(decompressedPixelData.buffer.byteLength)}`
       );
@@ -102,6 +125,12 @@ export default async function main() {
       console.error(err);
     }
   }
+}
+
+function main() {
+  const fileUrlInput = document.getElementById('test-file');
+  const fileUrl = (fileUrlInput as HTMLInputElement).value;
+  loadImages({ urls: [fileUrl] });
 }
 
 main();
