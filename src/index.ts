@@ -31,7 +31,9 @@ export default async function main() {
 
     try {
       // Parse DICOM
+      console.time('parse');
       dicomData = dcmjs.data.DicomMessage.readFile(fileArrayBuffer);
+      console.timeEnd('parse');
 
       // const naturalizedDicomData: NamedDicomDict = {
       //   meta: dcmjs.data.DicomMetaDictionary.naturalizeDataset(dicomData.meta),
@@ -42,14 +44,18 @@ export default async function main() {
 
       // Anonymize buffer headers
       const anonymizationScript = defaultScript;
+      console.time('anon');
       const anonymizedDicomData = await anonymizeDicomDataset(dicomData, anonymizationScript);
+      console.timeEnd('anon');
       console.log(anonymizedDicomData);
 
       // Decompress pixel data if necessary
       logToDiv(
         `Transfer syntax: ${knownTransferSyntax(anonymizedDicomData.meta['00020010'].Value[0])}`
       );
+      console.time('decompress');
       const image = await decompressPixelData(fileArrayBuffer);
+      console.timeEnd('decompress');
       const { pixelData: decompressedPixelData } = image.imageFrame;
       logToDiv(
         `Decompressed image, size: ${humanFileSize(decompressedPixelData.buffer.byteLength)}`
@@ -60,7 +66,9 @@ export default async function main() {
       anonymizedDicomData.meta['00020010'].Value = ['1.2.840.10008.1.2']; // Transfer syntax to implicit little endian
       // anonymizedDicomData.upsertTag('00020010', 'UI', ['1.2.840.10008.1.2']); // Transfer syntax to implicit little endian
       anonymizedDicomData.upsertTag('7FE00010', 'OW', [pixelDataArrayBuffer]);
+      console.time('write');
       const decompressedPart10Buffer = anonymizedDicomData.write();
+      console.timeEnd('write');
       logToDiv(
         `Generated new P10 buffer with decompressed pixel data, size: ${humanFileSize(
           decompressedPart10Buffer.byteLength

@@ -42,10 +42,18 @@ export default function resolveOperation(rule, script, dicomDataset) {
 
   if (operationName === 'hashuid') {
     const [root, valueToHash] = resolveParams(rule, script, dicomDataset);
-    if (!root || typeof root !== 'string' || !valueToHash || typeof valueToHash !== 'string') {
+    if (!root || typeof root !== 'string' || typeof valueToHash !== 'string') {
       throw new Error(
         `Both parameters for "hashuid" must be a string. Rule ${JSON.stringify(rule)}`
       );
+    }
+    if (!valueToHash) {
+      console.warn(
+        `No value resolved for hash function. Rule: ${JSON.stringify(
+          rule
+        )}. Setting element value to empty string.`
+      );
+      return ['upsert', ''];
     }
     const newValue = anonFunctions.hashuid(root, valueToHash);
     return ['upsert', newValue];
@@ -54,7 +62,12 @@ export default function resolveOperation(rule, script, dicomDataset) {
   if (operationName === 'hash') {
     const [valueToHash, maxChars] = resolveParams(rule, script, dicomDataset);
     if (!valueToHash || typeof valueToHash !== 'string') {
-      throw new Error(`No value resolved for hash function. Rule: ${JSON.stringify(rule)}`);
+      console.warn(
+        `No value resolved for hash function. Rule: ${JSON.stringify(
+          rule
+        )}. Setting element value to empty string.`
+      );
+      return ['upsert', ''];
     }
     if (maxChars && typeof maxChars !== 'string') {
       throw new Error(
@@ -69,6 +82,14 @@ export default function resolveOperation(rule, script, dicomDataset) {
 
   if (operationName === 'hashdate') {
     const [dateToIncrement, valueToHashForIncrement] = resolveParams(rule, script, dicomDataset);
+    if (dateToIncrement === '') {
+      console.warn(
+        `No value resolved for date. Rule: ${JSON.stringify(
+          rule
+        )}. Setting element value to empty string.`
+      );
+      return ['upsert', ''];
+    }
     if (
       !dateToIncrement ||
       !valueToHashForIncrement ||

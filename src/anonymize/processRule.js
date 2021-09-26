@@ -31,12 +31,17 @@ export default function processRule(rule, script, dicomDataset) {
     removeTag(dicomDataset, tag);
   }
 
-  const [resolvedOperation, value] = resolveOperation(rule, script, dicomDataset);
-
-  if (!datasetElement && !['append', 'require', 'always', 'upsert'].includes(resolvedOperation)) {
-    console.log(`DICOM tag ${tag} not contained in DICOM dataset, cannot '${resolvedOperation}'.`);
+  if (
+    !datasetElement &&
+    !['append', 'require', 'always', 'upsert'].includes(rule.operation.operationName)
+  ) {
+    console.log(
+      `DICOM tag ${tag} not contained in DICOM dataset, cannot '${rule.operation.operationName}'.`
+    );
     return false;
   }
+
+  const [resolvedOperation, value] = resolveOperation(rule, script, dicomDataset);
 
   // Process rule operation
   if (resolvedOperation === 'empty') {
@@ -59,6 +64,7 @@ export default function processRule(rule, script, dicomDataset) {
   if (resolvedOperation === 'upsert') {
     if (!datasetElement) {
       addTag(dicomDataset, tag, value);
+      return true;
     }
     replaceTag(dicomDataset, tag, datasetElement.vr, value);
     return true;

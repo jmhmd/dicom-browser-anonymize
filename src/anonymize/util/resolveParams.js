@@ -25,18 +25,22 @@ function resolveParam(param, rule, script, dicomDataset) {
   }
 
   if (param === 'this') {
-    const thisValue = dicomDataset.dict[rule.tag].Value;
+    const datasetElement = dicomDataset.dict[rule.tag] || dicomDataset.meta[rule.tag];
+    if (!datasetElement) {
+      console.error(`Tag not found in dataset: ${rule.tag}`);
+    }
+    const thisValue = datasetElement.Value;
     return thisValue.length === 1 ? thisValue[0] : thisValue;
   }
 
   // Try to look up string as a tag name
   const tagFromName = nameToTag(param);
   if (tagFromName) {
-    const element = dicomDataset.dict[tagFromName];
-    if (!element) {
+    const datasetElement = dicomDataset.dict[tagFromName] || dicomDataset.meta[tagFromName];
+    if (!datasetElement) {
       throw new Error(`Element ${param} not found in DICOM dataset.`);
     }
-    return element.Value;
+    return datasetElement.Value.length === 1 ? datasetElement.Value[0] : datasetElement.Value;
   }
 
   // Not a script, variable, 'this', or tag name, so just return param to be interpolated literally

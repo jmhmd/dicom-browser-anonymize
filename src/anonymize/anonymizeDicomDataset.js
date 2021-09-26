@@ -21,13 +21,18 @@ export default async function anonymizeDicomDataset(dicomDataset, anonymizationS
 
   // Loop through all element rules and execute
   for (const rule of script.rules) {
-    processRule(rule, script, dicomDataset);
+    try {
+      processRule(rule, script, dicomDataset);
+    } catch (error) {
+      console.error(`Failed to process rule: ${JSON.stringify(rule)}`);
+      throw error;
+    }
   }
 
   // Loop through all remaining elements and clean up
   const ruleTags = script.rules.map((r) => r.tag);
   for (const tag of Object.keys(dicomDataset.dict)) {
-    const datasetElement = dicomDataset.dict[tag];
+    const datasetElement = dicomDataset.dict[tag] || dicomDataset.meta[tag];
 
     // If already processed by rules in script, skip
     if (ruleTags.includes(tag)) {
