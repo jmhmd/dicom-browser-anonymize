@@ -1,45 +1,35 @@
 import humanFileSize from './humanFileSize';
 import logToDiv from './logToDiv';
-import monitorMemory from './monitorMemory';
+// import monitorMemory from './monitorMemory';
 import dcmjs from 'dcmjs';
 import DicomDict2 from './DicomDict2';
 import knownTransferSyntax from './knownTransferSyntax';
 import getArrayBuffer from './get-array-buffer';
-import cornerstone from 'cornerstone-core';
-import cornerstoneWADOImageLoader from 'cornerstone-wado-image-loader';
 import dicomParser from 'dicom-parser';
 import anonymizeDicomDataset from './anonymize/anonymizeDicomDataset';
 import defaultScript from './anonymize/scripts/header-script.default';
 
-cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
-cornerstoneWADOImageLoader.configure();
+import { cornerstone, cornerstoneWADOImageLoader } from './cornerstone/cornerstone-setup.js';
 
-cornerstoneWADOImageLoader.webWorkerManager.initialize({
-  maxWebWorkers: 4,
-  startWebWorkersOnDemand: true,
-  webWorkerTaskPaths: [],
-  taskConfiguration: {
-    decodeTask: {
-      initializeCodecsOnStartup: true,
-      strict: true,
-    },
-  },
-});
+import Series from './Series';
+import { Ref } from 'vue';
 
 // For use later testing multiple files
-document.getElementById('input-files')?.addEventListener('change', (event) => {
-  const fileList = (event.target as HTMLInputElement).files;
-});
+// document.getElementById('input-files')?.addEventListener('change', (event) => {
+//   const fileList = (event.target as HTMLInputElement).files;
+// });
 
-export default async function loadImages(imageSources: { urls?: string[]; files?: FileList }) {
+export default async function loadImages(
+  imageSources: { urls?: string[]; files?: FileList },
+  seriesObj: Ref<Series> | null
+) {
   const { urls, files } = imageSources;
   let cornerstoneImageObjects: any[] = [];
 
   if (urls) {
     for (const url of urls) {
       const imageId = `wadouri:${url}`;
-      const image = await cornerstone.loadImage(imageId);
+      const image = await cornerstone.loadAndCacheImage(imageId);
       image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
       image.decompressedPixelData = image.imageFrame.pixelData;
       cornerstoneImageObjects.push(image);
@@ -48,7 +38,7 @@ export default async function loadImages(imageSources: { urls?: string[]; files?
   if (files) {
     for (const file of Array.from(files)) {
       const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-      const image = await cornerstone.loadImage(imageId);
+      const image = await cornerstone.loadAndCacheImage(imageId);
       image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
       image.decompressedPixelData = image.imageFrame.pixelData;
       cornerstoneImageObjects.push(image);
@@ -100,11 +90,15 @@ export default async function loadImages(imageSources: { urls?: string[]; files?
       // console.log(decompressedPart10Buffer);
 
       // Try to display image
-      logToDiv('Displaying image...');
-      const element = document.getElementById('image');
-      cornerstone.enable(element);
-      var viewport = cornerstone.getDefaultViewportForImage(element, image);
-      cornerstone.displayImage(element, image, viewport);
+      // logToDiv('Displaying image...');
+      // const element = document.getElementById('image');
+      // cornerstone.enable(element);
+      // var viewport = cornerstone.getDefaultViewportForImage(element, image);
+      // cornerstone.displayImage(element, image, viewport);
+      seriesObj?.value.instances.push({
+        imageId: image.imageId,
+        image,
+      });
 
       // Try to parse buffer
       const byteArray = new Uint8Array(decompressedPart10Buffer);
@@ -112,14 +106,14 @@ export default async function loadImages(imageSources: { urls?: string[]; files?
       logToDiv('Successfully parsed generated P10 buffer');
 
       // Make file available for download
-      document.getElementById('download-file')?.addEventListener('click', () => {
-        var blob = new Blob([decompressedPart10Buffer], { type: 'application/dicom' });
-        var link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        var fileName = 'anonymized-dicom-file';
-        link.download = fileName;
-        link.click();
-      });
+      // document.getElementById('download-file')?.addEventListener('click', () => {
+      //   var blob = new Blob([decompressedPart10Buffer], { type: 'application/dicom' });
+      //   var link = document.createElement('a');
+      //   link.href = window.URL.createObjectURL(blob);
+      //   var fileName = 'anonymized-dicom-file';
+      //   link.download = fileName;
+      //   link.click();
+      // });
     } catch (err) {
       logToDiv('Failed to process DICOM');
       console.error(err);
@@ -127,14 +121,14 @@ export default async function loadImages(imageSources: { urls?: string[]; files?
   }
 }
 
-function main() {
-  const fileUrlInput = document.getElementById('test-file');
-  const fileUrl = (fileUrlInput as HTMLInputElement).value;
-  loadImages({ urls: [fileUrl] });
-}
+// function main() {
+//   const fileUrlInput = document.getElementById('test-file');
+//   const fileUrl = (fileUrlInput as HTMLInputElement).value;
+//   loadImages({ urls: [fileUrl] });
+// }
 
-main();
+// main();
 
-// getHeaderAnonymizationScript('/anonymizer-scripts/dicom-anonymizer.default.script');
+// // getHeaderAnonymizationScript('/anonymizer-scripts/dicom-anonymizer.default.script');
 
-monitorMemory();
+// monitorMemory();

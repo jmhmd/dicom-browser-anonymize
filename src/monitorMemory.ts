@@ -1,10 +1,11 @@
 import humanFileSize from './humanFileSize';
 
-export default function monitorMemory() {
+export default function monitorMemory(element: HTMLElement) {
   let memoryMin: number | null = null;
   let memoryMax = 0;
   window.setInterval(() => {
-    const el = document.getElementById('memory');
+    if (!element) return false;
+    const el = element;
     const performance = window.performance as any;
     const memoryLimit = humanFileSize(performance.memory.jsHeapSizeLimit);
     const memoryAllocated = humanFileSize(performance.memory.totalJSHeapSize);
@@ -27,5 +28,6 @@ export default function monitorMemory() {
       <div>Max alloc: ${memoryMax && humanFileSize(memoryMax)}</div>
       `;
     }
+    return true;
   }, 200);
 }

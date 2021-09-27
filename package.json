@@ -3,22 +3,35 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vue-tsc --noEmit && vite build",
     "serve": "vite preview"
   },
   "type": "module",
-  "devDependencies": {
-    "@types/md5": "^2.3.1",
-    "typescript": "^4.3.2",
-    "vite": "^2.5.4"
-  },
   "dependencies": {
     "cornerstone-core": "^2.5.0",
+    "cornerstone-math": "^0.1.9",
+    "cornerstone-tools": "^6.0.0",
     "cornerstone-wado-image-loader": "^4.0.0",
     "date-fns": "^2.24.0",
     "dcmjs": "^0.18.8",
     "dicom-parser": "^1.8.8",
+    "hammerjs": "^2.0.8",
     "md5": "^2.3.0",
-    "ts-node": "^10.2.1"
+    "uuid": "^8.3.2",
+    "vue": "^3.2.19"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.3.3",
+    "@types/hammerjs": "^2.0.40",
+    "@types/md5": "^2.3.1",
+    "@types/uuid": "^8.3.1",
+    "@vitejs/plugin-vue": "^1.9.2",
+    "autoprefixer": "^10.3.6",
+    "postcss": "^8.3.8",
+    "tailwindcss": "^2.2.16",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3",
+    "vite": "^2.5.4",
+    "vue-tsc": "^0.3.0"
   }
 }
