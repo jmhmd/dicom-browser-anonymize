@@ -1,44 +1,61 @@
 import humanFileSize from './humanFileSize';
 import logToDiv from './logToDiv';
-import fetchImageToArrayBuffer from './fetchImageToArrayBuffer';
-import monitorMemory from './monitorMemory';
+// import monitorMemory from './monitorMemory';
 import dcmjs from 'dcmjs';
 import DicomDict2 from './DicomDict2';
 import knownTransferSyntax from './knownTransferSyntax';
-import decompressPixelData from './decompress-pixel-data/decompressPixelData';
 import getArrayBuffer from './get-array-buffer';
-import cornerstone from 'cornerstone-core';
 import dicomParser from 'dicom-parser';
 import anonymizeDicomDataset from './anonymize/anonymizeDicomDataset';
 import defaultScript from './anonymize/scripts/header-script.default';
 
+import { cornerstone, cornerstoneWADOImageLoader } from './cornerstone/cornerstone-setup.js';
+
+import Series from './Series';
+import { Ref } from 'vue';
+
 // For use later testing multiple files
-document.getElementById('input-files')?.addEventListener('change', (event) => {
-  const fileList = (event.target as HTMLInputElement).files;
-});
+// document.getElementById('input-files')?.addEventListener('change', (event) => {
+//   const fileList = (event.target as HTMLInputElement).files;
+// });
 
-export default async function main() {
-  const fileUrlInput = document.getElementById('test-file');
-  const fileUrl = (fileUrlInput as HTMLInputElement).value;
-  const fileArrayBuffers: ArrayBuffer[] = [];
+export default async function loadImages(
+  imageSources: { urls?: string[]; files?: FileList },
+  seriesObj: Ref<Series> | null
+) {
+  const { urls, files } = imageSources;
+  let cornerstoneImageObjects: any[] = [];
 
-  if (fileUrl) {
-    fileArrayBuffers[0] = await fetchImageToArrayBuffer(fileUrl);
-    logToDiv(`Fetched file, size: ${humanFileSize(fileArrayBuffers[0].byteLength)}`);
+  if (urls) {
+    for (const url of urls) {
+      const imageId = `wadouri:${url}`;
+      const image = await cornerstone.loadAndCacheImage(imageId);
+      image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
+      image.decompressedPixelData = image.imageFrame.pixelData;
+      cornerstoneImageObjects.push(image);
+    }
   }
-  for (const fileArrayBuffer of fileArrayBuffers) {
+  if (files) {
+    for (const file of Array.from(files)) {
+      const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+      const image = await cornerstone.loadAndCacheImage(imageId);
+      image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
+      image.decompressedPixelData = image.imageFrame.pixelData;
+      cornerstoneImageObjects.push(image);
+    }
+  }
+
+  for (const [index, image] of cornerstoneImageObjects.entries()) {
+    logToDiv(`Processing image ${index + 1} of ${cornerstoneImageObjects.length}`);
     let dicomData: DicomDict2;
+    const { dicomP10ArrayBuffer, decompressedPixelData } = image;
 
     try {
       // Parse DICOM
       console.time('parse');
-      dicomData = dcmjs.data.DicomMessage.readFile(fileArrayBuffer);
+      dicomData = dcmjs.data.DicomMessage.readFile(dicomP10ArrayBuffer);
       console.timeEnd('parse');
 
-      // const naturalizedDicomData: NamedDicomDict = {
-      //   meta: dcmjs.data.DicomMetaDictionary.naturalizeDataset(dicomData.meta),
-      //   dict: dcmjs.data.DicomMetaDictionary.naturalizeDataset(dicomData.dict),
-      // }
       console.log(JSON.parse(JSON.stringify(dicomData)));
       logToDiv('Parsed DICOM file');
 
@@ -53,10 +70,6 @@ export default async function main() {
       logToDiv(
         `Transfer syntax: ${knownTransferSyntax(anonymizedDicomData.meta['00020010'].Value[0])}`
       );
-      console.time('decompress');
-      const image = await decompressPixelData(fileArrayBuffer);
-      console.timeEnd('decompress');
-      const { pixelData: decompressedPixelData } = image.imageFrame;
       logToDiv(
         `Decompressed image, size: ${humanFileSize(decompressedPixelData.buffer.byteLength)}`
       );
@@ -77,11 +90,15 @@ export default async function main() {
       // console.log(decompressedPart10Buffer);
 
       // Try to display image
-      logToDiv('Displaying image...');
-      const element = document.getElementById('image');
-      cornerstone.enable(element);
-      var viewport = cornerstone.getDefaultViewportForImage(element, image);
-      cornerstone.displayImage(element, image, viewport);
+      // logToDiv('Displaying image...');
+      // const element = document.getElementById('image');
+      // cornerstone.enable(element);
+      // var viewport = cornerstone.getDefaultViewportForImage(element, image);
+      // cornerstone.displayImage(element, image, viewport);
+      seriesObj?.value.instances.push({
+        imageId: image.imageId,
+        image,
+      });
 
       // Try to parse buffer
       const byteArray = new Uint8Array(decompressedPart10Buffer);
@@ -89,14 +106,14 @@ export default async function main() {
       logToDiv('Successfully parsed generated P10 buffer');
 
       // Make file available for download
-      document.getElementById('download-file')?.addEventListener('click', () => {
-        var blob = new Blob([decompressedPart10Buffer], { type: 'application/dicom' });
-        var link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        var fileName = 'anonymized-dicom-file';
-        link.download = fileName;
-        link.click();
-      });
+      // document.getElementById('download-file')?.addEventListener('click', () => {
+      //   var blob = new Blob([decompressedPart10Buffer], { type: 'application/dicom' });
+      //   var link = document.createElement('a');
+      //   link.href = window.URL.createObjectURL(blob);
+      //   var fileName = 'anonymized-dicom-file';
+      //   link.download = fileName;
+      //   link.click();
+      // });
     } catch (err) {
       logToDiv('Failed to process DICOM');
       console.error(err);
@@ -104,8 +121,14 @@ export default async function main() {
   }
 }
 
-main();
+// function main() {
+//   const fileUrlInput = document.getElementById('test-file');
+//   const fileUrl = (fileUrlInput as HTMLInputElement).value;
+//   loadImages({ urls: [fileUrl] });
+// }
 
-// getHeaderAnonymizationScript('/anonymizer-scripts/dicom-anonymizer.default.script');
+// main();
 
-monitorMemory();
+// // getHeaderAnonymizationScript('/anonymizer-scripts/dicom-anonymizer.default.script');
+
+// monitorMemory();
