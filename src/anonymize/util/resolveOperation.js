@@ -7,6 +7,7 @@
 
 import { resolveParams } from './resolveParams';
 import anonFunctions from '../functions';
+import { log } from './logger';
 
 /**
  *
@@ -48,11 +49,17 @@ export default function resolveOperation(rule, script, dicomDataset) {
       );
     }
     if (!valueToHash) {
-      console.warn(
+      log(
+        'warn',
         `No value resolved for hash function. Rule: ${JSON.stringify(
           rule
         )}. Setting element value to empty string.`
       );
+      // console.warn(
+      //   `No value resolved for hash function. Rule: ${JSON.stringify(
+      //     rule
+      //   )}. Setting element value to empty string.`
+      // );
       return ['upsert', ''];
     }
     const newValue = anonFunctions.hashuid(root, valueToHash);
@@ -62,11 +69,17 @@ export default function resolveOperation(rule, script, dicomDataset) {
   if (operationName === 'hash') {
     const [valueToHash, maxChars] = resolveParams(rule, script, dicomDataset);
     if (!valueToHash || typeof valueToHash !== 'string') {
-      console.warn(
+      log(
+        'warn',
         `No value resolved for hash function. Rule: ${JSON.stringify(
           rule
         )}. Setting element value to empty string.`
       );
+      // console.warn(
+      //   `No value resolved for hash function. Rule: ${JSON.stringify(
+      //     rule
+      //   )}. Setting element value to empty string.`
+      // );
       return ['upsert', ''];
     }
     if (maxChars && typeof maxChars !== 'string') {
@@ -83,11 +96,17 @@ export default function resolveOperation(rule, script, dicomDataset) {
   if (operationName === 'hashdate') {
     const [dateToIncrement, valueToHashForIncrement] = resolveParams(rule, script, dicomDataset);
     if (dateToIncrement === '') {
-      console.warn(
+      log(
+        'warn',
         `No value resolved for date. Rule: ${JSON.stringify(
           rule
         )}. Setting element value to empty string.`
       );
+      // console.warn(
+      //   `No value resolved for date. Rule: ${JSON.stringify(
+      //     rule
+      //   )}. Setting element value to empty string.`
+      // );
       return ['upsert', ''];
     }
     if (
@@ -153,8 +172,12 @@ export default function resolveOperation(rule, script, dicomDataset) {
     return ['upsert', paramValue];
   }
 
-  console.warn(
+  log(
+    'warn',
     `Function ${rule.operation.operationName} is not yet supported. Emptying tag for safety. Use '@keep()' if you would like to keep this field value.`
   );
+  // console.warn(
+  //   `Function ${rule.operation.operationName} is not yet supported. Emptying tag for safety. Use '@keep()' if you would like to keep this field value.`
+  // );
   return ['empty'];
 }

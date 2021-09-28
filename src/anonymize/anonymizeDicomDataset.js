@@ -4,6 +4,7 @@ import isPrivateGroup from './util/isPrivateGroup';
 import basicScript from './scripts/header-script.DICOM-PS3.15-Basic';
 import processRule from './processRule';
 import mergeScripts from './util/mergeScripts';
+import { clearLogs, getLogs, log } from './util/logger';
 
 /**
  * @typedef { import("../DicomDict2").default } DicomDict2
@@ -14,7 +15,6 @@ import mergeScripts from './util/mergeScripts';
  * Anonymize a parsed dicom dataset
  * @param {DicomDict2} dicomDataset
  * @param {Script} anonymizationScript
- * @returns {Promise<DicomDict2>}
  */
 export default async function anonymizeDicomDataset(dicomDataset, anonymizationScript) {
   const script = mergeScripts(basicScript, anonymizationScript);
@@ -24,7 +24,8 @@ export default async function anonymizeDicomDataset(dicomDataset, anonymizationS
     try {
       processRule(rule, script, dicomDataset);
     } catch (error) {
-      console.error(`Failed to process rule: ${JSON.stringify(rule)}`);
+      log('error', `Failed to process rule: ${JSON.stringify(rule)}`);
+      // console.error(`Failed to process rule: ${JSON.stringify(rule)}`);
       throw error;
     }
   }
@@ -57,5 +58,7 @@ export default async function anonymizeDicomDataset(dicomDataset, anonymizationS
     }
   }
 
-  return dicomDataset;
+  const logs = JSON.parse(JSON.stringify(getLogs()));
+  clearLogs();
+  return { dicomDataset, logs };
 }

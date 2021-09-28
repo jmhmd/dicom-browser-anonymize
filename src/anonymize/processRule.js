@@ -6,6 +6,7 @@
 
 import { addTag, emptyTag, removeTag, replaceTag } from './util/modifyTag';
 import resolveOperation from './util/resolveOperation';
+import { log } from './util/logger.js';
 
 /**
  *
@@ -27,7 +28,8 @@ export default function processRule(rule, script, dicomDataset) {
   }
 
   if (!rule.operation) {
-    console.warn(`No operation defined for tag ${tag}. Removing.`);
+    log('warn', `No operation defined for tag ${tag}. Removing.`);
+    // console.warn(`No operation defined for tag ${tag}. Removing.`);
     removeTag(dicomDataset, tag);
   }
 
@@ -35,9 +37,13 @@ export default function processRule(rule, script, dicomDataset) {
     !datasetElement &&
     !['append', 'require', 'always', 'upsert'].includes(rule.operation.operationName)
   ) {
-    console.log(
+    log(
+      'info',
       `DICOM tag ${tag} not contained in DICOM dataset, cannot '${rule.operation.operationName}'.`
     );
+    // console.log(
+    //   `DICOM tag ${tag} not contained in DICOM dataset, cannot '${rule.operation.operationName}'.`
+    // );
     return false;
   }
 

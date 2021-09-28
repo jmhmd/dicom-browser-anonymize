@@ -1,5 +1,6 @@
 import { nameToTag } from './dicomDictionary.js';
 import getScriptParameter from './getScriptParameter.js';
+import { log } from './logger.js';
 import resolveOperation from './resolveOperation.js';
 
 /**
@@ -27,7 +28,9 @@ function resolveParam(param, rule, script, dicomDataset) {
   if (param === 'this') {
     const datasetElement = dicomDataset.dict[rule.tag] || dicomDataset.meta[rule.tag];
     if (!datasetElement) {
-      console.error(`Tag not found in dataset: ${rule.tag}`);
+      log('error', `Tag reference by 'this' not found in dataset. Rule: ${rule}`);
+      throw new Error(`Tag reference by 'this' not found in dataset. Rule: ${rule}`);
+      // console.error(`Tag not found in dataset: ${rule.tag}`);
     }
     const thisValue = datasetElement.Value;
     return thisValue.length === 1 ? thisValue[0] : thisValue;
