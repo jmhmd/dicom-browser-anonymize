@@ -1,7 +1,7 @@
 import anonymizeDicomDataset from './anonymize/anonymizeDicomDataset';
 import defaultScript from './anonymize/scripts/header-script.default';
 import logToDiv from './logToDiv';
-import { Instance } from './Series';
+import Instance from './Instance';
 
 export default async function anonymizeInstance(instance: Instance) {
   const { dicomDataset } = instance.image;

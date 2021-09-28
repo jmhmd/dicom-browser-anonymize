@@ -1,14 +1,49 @@
 <template>
-  <div class="flex">
-    <div class="w-1/2 px-5">
+  <div>
+    <div class="w-full px-5">
       <h1 class="text-xl font-bold">In browser DICOM anonymization</h1>
 
       <div class="flex">
-        <div class="flex-grow">
-          <a href="#" @click.prevent="tab = 'input-files'">Input files</a>
-        </div>
-        <div class="flex-grow"><a href="#" @click.prevent="tab = 'anonymize'">Anonymize</a></div>
-        <div class="flex-grow"><a href="#" @click.prevent="tab = 'log'">Log</a></div>
+        <a
+          href="#"
+          @click.prevent="tab = 'input-files'"
+          class="tab inline-block"
+          :class="{ 'tab-active': tab === 'input-files' }"
+        >
+          <span>Input files</span>
+        </a>
+        <a
+          href="#"
+          @click.prevent="tab = 'anonymize'"
+          class="tab inline-block"
+          :class="{ 'tab-active': tab === 'anonymize' }"
+        >
+          <span>Anonymize headers</span>
+        </a>
+        <a
+          href="#"
+          @click.prevent="tab = 'redact'"
+          class="tab inline-block"
+          :class="{ 'tab-active': tab === 'redact' }"
+        >
+          <span>Redact pixels</span>
+        </a>
+        <a
+          href="#"
+          @click.prevent="tab = 'export'"
+          class="tab inline-block"
+          :class="{ 'tab-active': tab === 'export' }"
+        >
+          <span>Export files</span>
+        </a>
+        <a
+          href="#"
+          @click.prevent="tab = 'log'"
+          class="tab inline-block"
+          :class="{ 'tab-active': tab === 'log' }"
+        >
+          <span>Log</span>
+        </a>
       </div>
       <section v-if="tab === 'input-files'">
         <h3 class="font-bold">Input DICOM files</h3>
@@ -31,60 +66,109 @@
           "
         />
         <h3 class="font-bold">Files:</h3>
-        <div></div>
+        <StudyList :studies="studies"></StudyList>
       </section>
       <section v-if="tab === 'anonymize'">
         <h3 class="font-bold">Anonymizer</h3>
-        <a href="#" @click.prevent="anonymizeInstances">Anonymize</a>
-        <a href="#" @click.prevent="showAnonScript = !showAnonScript"
-          >Show default anonymization script</a
-        >
-        <div v-if="showAnonScript">
-          {{ JSON.stringify(defaultScript, null, 4) }}
-        </div>
-        <div v-if="anonymizedInstances.length">
-          <h3 class="font-bold">Anonymized files:</h3>
-          <div v-for="instance in anonymizedInstances">
-            Anonymized imageId: {{ instance.imageId }}, Logs:
-            {{ instance.anonymizationLogs.length }}
+        <div class="flex">
+          <div class="w-1/2">
+            <div class="mt-10">
+              <div class="btn" @click.prevent="anonymizeInstances">Anonymize all images</div>
+            </div>
+            <StudyList :studies="studies" class="mt-10"></StudyList>
+            <div v-if="anonymizedInstances.length" class="mt-10">
+              <h3 class="font-bold">Anonymized files:</h3>
+              <div v-for="instance in anonymizedInstances">
+                imageId: {{ instance.imageId }},
+                <a
+                  href="#"
+                  @click.prevent="
+                    showLogsForImageId =
+                      showLogsForImageId === instance.imageId ? null : instance.imageId
+                  "
+                  >Logs: {{ instance.anonymizationLogs.length }}</a
+                >
+                <div
+                  v-if="showLogsForImageId === instance.imageId"
+                  class="bg-gray-100 p-2 border text-xs"
+                >
+                  <div v-for="log in instance.anonymizationLogs">
+                    <span class="font-bold">{{ log.level }}:</span> {{ log.message }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="w-1/2">
+            <a href="#" @click.prevent="showAnonScript = !showAnonScript"
+              >Show default anonymization script</a
+            >
+            <div v-if="showAnonScript">
+              <p class="text-sm">
+                This anonymizer supports a subset of the operations implemented by the RSNA CTP
+                anonymizer. The script format has been converted to JSON, however follows the same
+                basic structure. See the
+                <a href="https://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Anonymizer"
+                  >CTP anonymizer</a
+                >
+                reference for more information.
+              </p>
+              <pre class="text-xs bg-gray-100 p-2 border">{{
+                JSON.stringify(defaultScript, null, 4)
+              }}</pre>
+            </div>
           </div>
         </div>
       </section>
-      <section v-if="tab === 'log'" id="log"></section>
-      <!-- <section>
-        <h3>Links:</h3>
-        <div>
-          <a href="#" id="download-file">Download file</a>
+      <section v-if="tab === 'redact'">
+        <div class="flex">
+          <div class="w-1/3">
+            <StudyList
+              :studies="studies"
+              selectable
+              @select-series="(series: Series) => (selectedSeries = series)"
+            ></StudyList>
+          </div>
+          <div class="w-full">
+            <SeriesViewer
+              v-if="selectedSeries"
+              :series="selectedSeries"
+              redact-enabled
+              @update-redaction-boxes="updateRedaction"
+              :key="viewerKey"
+            ></SeriesViewer>
+          </div>
         </div>
-      </section> -->
-    </div>
-    <div class="flex-grow">
-      <section>
-        <!-- <SeriesViewer
-          v-if="series.instances.length > 0"
-          :series="series"
-          redact-enabled
-          @update-redaction-boxes="updateRedaction"
-          :key="viewerKey"
-        ></SeriesViewer> -->
+      </section>
+      <section v-if="tab === 'export'">
+        <h3 class="font-bold">Download files:</h3>
+        <StudyList :studies="studies" exportable class="mt-5"></StudyList>
+      </section>
+      <section v-if="tab === 'log'" id="log">
+        <div v-for="log in logs">
+          {{ log }}
+        </div>
       </section>
     </div>
   </div>
-  <div ref="memoryDiv" style="position: absolute; left: 5px; bottom: 5px; background-color: white">
+  <div ref="memoryDiv" style="position: fixed; right: 5px; bottom: 5px; background-color: white">
     Loading memory...
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import loadImages from '../src';
+import loadImages from '../src/loadImages';
 import SeriesViewer from '../src/redact/series-viewer.vue';
 import monitorMemory from '../src/monitorMemory';
 import Study from '../src/Study';
 import ImageFrame from '../src/ImageFrame';
 import defaultScript from '../src/anonymize/scripts/header-script.default';
 import anonymizeInstance from '../src/anonymizeInstance';
-import { Instance } from '../src/Series';
+import type Series from '../src/Series';
+import type Instance from '../src/Instance';
+import StudyList from '../src/StudyList.vue';
+import { logs } from '../src/logToDiv';
 
 const fileUrlInput = ref<HTMLInputElement>(null);
 const memoryDiv = ref<HTMLElement>(null);
@@ -92,6 +176,8 @@ const studies = ref<Study[]>([]);
 const viewerKey = ref(0);
 const tab = ref('input-files');
 const showAnonScript = ref(false);
+const selectedSeries = ref<Series>(null);
+const showLogsForImageId = ref(null);
 
 onMounted(() => {
   const fileUrl = fileUrlInput.value.value;
@@ -112,7 +198,7 @@ const anonymizedInstances = computed(() => {
   return allInstances.value.filter((i) => i.image.anonymizedDicomData);
 });
 async function anonymizeInstances() {
-  await Promise.all(allInstances.value.map(anonymizeInstance));
+  Promise.all(allInstances.value.map(anonymizeInstance));
 }
 
 function getRectangleImageCoordinates(startHandle, endHandle) {
@@ -136,7 +222,7 @@ function updateRedaction(redactionBoxes: any) {
       getRectangleImageCoordinates(redactionBox.handles.start, redactionBox.handles.end)
     );
 
-    series.value.instances.forEach((instance) => {
+    selectedSeries.value.instances.forEach((instance) => {
       const { image } = instance;
       const { rows, columns, pixelData, pixelDataLength } = image.imageFrame as ImageFrame;
       if (rows * columns !== pixelDataLength) {
@@ -163,7 +249,7 @@ function updateRedaction(redactionBoxes: any) {
           pixelData.set(zeroingArray, startIndex);
         }
       });
-      console.log('redacted', series.value.instances[0].image.imageFrame.pixelData);
+      console.log('redacted', selectedSeries.value.instances[0].image.imageFrame.pixelData);
     });
 
     // console.log('purge and reload cache');
@@ -180,3 +266,12 @@ function updateRedaction(redactionBoxes: any) {
   }
 }
 </script>
+
+<style scoped>
+.tab {
+  @apply flex-grow text-center bg-gray-200 border border-gray-500 text-black;
+}
+.tab-active {
+  @apply border-b-0 bg-white;
+}
+</style>

@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { v4 as uuidv4 } from 'uuid';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import {
   cornerstone,
   cornerstoneTools,
