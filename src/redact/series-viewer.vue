@@ -54,12 +54,6 @@ const redacting = ref(false);
 const imageIdsRendered = ref<string[]>([]);
 const canvas = ref<HTMLDivElement>();
 
-watch(props.series.instances, (instances) => {
-  if (instances.length > 0) {
-    loadSeries();
-  }
-});
-
 defineExpose({
   canvas,
 });
@@ -123,7 +117,8 @@ onMounted(() => {
 onUnmounted(() => {
   cornerstoneWADOImageLoader.wadouri.fileManager.purge();
   cornerstoneWADOImageLoader.wadouri.dataSetCacheManager.purge();
-  cornerstone.imageCache.purgeCache();
+  // Managing the cache manually since we're directly editing files
+  // cornerstone.imageCache.purgeCache();
   // clear all tool data
   cornerstoneTools.globalImageIdSpecificToolStateManager.restoreToolState({});
   // cornerstone.events.removeEventListener(cornerstone.EVENTS.IMAGE_LOADED, this.onImageLoaded);
@@ -141,10 +136,12 @@ function loadSeries() {
   cornerstone.enable(element);
 
   return cornerstone
-    .loadAndCacheImage(stack.value.imageIds[stack.value.currentImageIdIndex])
+    .loadImage(stack.value.imageIds[stack.value.currentImageIdIndex])
     .then((image: any) => {
       // display this image
       const viewport = cornerstone.getDefaultViewportForImage(element, image);
+
+      cornerstone.invalidate(element);
       cornerstone.displayImage(element, image, viewport);
 
       // set the stack as tool state

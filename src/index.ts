@@ -21,7 +21,7 @@ import { Ref } from 'vue';
 
 export default async function loadImages(
   imageSources: { urls?: string[]; files?: FileList },
-  seriesObj: Ref<Series> | null
+  seriesArray: Ref<Series> | null
 ) {
   const { urls, files } = imageSources;
   let cornerstoneImageObjects: any[] = [];
@@ -46,6 +46,15 @@ export default async function loadImages(
   }
 
   for (const [index, image] of cornerstoneImageObjects.entries()) {
+    // console.log(image.imageId);
+    // image.imageFrame.columns = 100;
+    // console.log(image.imageFrame.columns);
+    // const imagePromise = await cornerstone.loadImage(image.imageId);
+    // imagePromise.imageFrame.columns;
+    // console.log(imagePromise.imageFrame.columns);
+    // return;
+    console.log('first load cache', cornerstone.imageCache.imageCache);
+
     logToDiv(`Processing image ${index + 1} of ${cornerstoneImageObjects.length}`);
     let dicomData: DicomDict2;
     const { dicomP10ArrayBuffer, decompressedPixelData } = image;
@@ -64,7 +73,7 @@ export default async function loadImages(
       console.time('anon');
       const anonymizedDicomData = await anonymizeDicomDataset(dicomData, anonymizationScript);
       console.timeEnd('anon');
-      console.log(anonymizedDicomData);
+      logToDiv('Anonymized headers');
 
       // Decompress pixel data if necessary
       logToDiv(
@@ -95,7 +104,8 @@ export default async function loadImages(
       // cornerstone.enable(element);
       // var viewport = cornerstone.getDefaultViewportForImage(element, image);
       // cornerstone.displayImage(element, image, viewport);
-      seriesObj?.value.instances.push({
+      logToDiv('Adding image to viewer');
+      seriesArray?.value.instances.push({
         imageId: image.imageId,
         image,
       });
