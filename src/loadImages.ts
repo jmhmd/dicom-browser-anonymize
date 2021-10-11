@@ -7,10 +7,12 @@ import { cornerstone, cornerstoneWADOImageLoader } from './cornerstone/cornersto
 
 import Study from './Study';
 import { Ref } from 'vue';
+import aTick from './aTick';
 
 export default async function loadImages(
   imageSources: { urls?: string[]; files?: FileList },
-  studies: Ref<Study[]>
+  studies: Ref<Study[]>,
+  loadStatus: Ref
 ) {
   const { urls, files } = imageSources;
   let cornerstoneImageObjects: any[] = [];
@@ -18,6 +20,7 @@ export default async function loadImages(
   if (urls) {
     for (const url of urls) {
       const imageId = `wadouri:${url}`;
+      loadStatus.value = `Loading image: ${imageId}`;
       const image = await cornerstone.loadAndCacheImage(imageId);
       image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
       image.decompressedPixelData = image.imageFrame.pixelData;
@@ -26,15 +29,21 @@ export default async function loadImages(
   }
   if (files) {
     for (const file of Array.from(files)) {
-      const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-      const image = await cornerstone.loadAndCacheImage(imageId);
-      image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
-      image.decompressedPixelData = image.imageFrame.pixelData;
-      cornerstoneImageObjects.push(image);
+      try {
+        const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+        loadStatus.value = `Loading image: ${imageId}`;
+        const image = await cornerstone.loadAndCacheImage(imageId);
+        image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
+        image.decompressedPixelData = image.imageFrame.pixelData;
+        cornerstoneImageObjects.push(image);
+      } catch (err) {
+        console.error(err);
+      }
     }
   }
 
   for (const [index, image] of cornerstoneImageObjects.entries()) {
+    await aTick();
     logToDiv(`Processing image ${index + 1} of ${cornerstoneImageObjects.length}`);
     let dicomData: DicomDict2;
     const { dicomP10ArrayBuffer } = image;
@@ -52,6 +61,7 @@ export default async function loadImages(
       // Sort into Study & Series
       const studyInstanceUID = dicomData.dict['0020000D']?.Value[0];
       const studyDescription = dicomData.dict['00081030']?.Value[0];
+
       let study = studies.value.find((s) => s.studyInstanceUID === studyInstanceUID);
       if (!study) {
         study = {
@@ -72,32 +82,33 @@ export default async function loadImages(
           modality,
           instances: [],
         };
+        study.series.push(series);
       }
       series.instances.push({
         imageId: image.imageId,
         image,
       });
-      study.series.push(series);
-
-      // console.log(decompressedPart10Buffer);
-
-      // Try to parse buffer
-      // const byteArray = new Uint8Array(decompressedPart10Buffer);
-      // dicomParser.parseDicom(byteArray);
-      // logToDiv('Successfully parsed generated P10 buffer');
-
-      // Make file available for download
-      // document.getElementById('download-file')?.addEventListener('click', () => {
-      //   var blob = new Blob([decompressedPart10Buffer], { type: 'application/dicom' });
-      //   var link = document.createElement('a');
-      //   link.href = window.URL.createObjectURL(blob);
-      //   var fileName = 'anonymized-dicom-file';
-      //   link.download = fileName;
-      //   link.click();
-      // });
     } catch (err) {
       logToDiv('Failed to process DICOM');
       console.error(err);
+    }
+  }
+
+  // Sort series instances by instanceNumber
+  for (const study of studies.value) {
+    for (const series of study.series) {
+      series.instances.sort((a, b) => {
+        if (!a.image.dicomDataset || !b.image.dicomDataset) return 0;
+        const aInstanceNumber = parseInt(
+          a.image.dicomDataset.dict['00200013'].Value[0] as string,
+          10
+        );
+        const bInstanceNumber = parseInt(
+          b.image.dicomDataset.dict['00200013'].Value[0] as string,
+          10
+        );
+        return aInstanceNumber - bInstanceNumber;
+      });
     }
   }
 }

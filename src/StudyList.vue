@@ -8,24 +8,32 @@
         <!-- <span class="text-gray-500 ml-5">({{ study.series.length }} series)</span> -->
         <ol class="list-inside list-decimal ml-5">
           <li v-for="(series, seriesIndex) in study.series">
-            <a v-if="selectable" href="#" @click.prevent="selectSeries(series)">{{
-              series.seriesDescription || `Series ${seriesIndex + 1}`
-            }}</a>
-            <span v-else @click.prevent="selectSeries(series)">{{
-              series.seriesDescription || `Series ${seriesIndex + 1}`
-            }}</span>
-            <span class="text-gray-500 ml-5"
-              >({{ series.instances.length }} instance{{
-                series.instances.length === 1 ? '' : 's'
-              }})</span
-            >
+            <div class="inline-block relative">
+              <span v-if="seriesFullyAnonymized(series)"> ✔️ </span>
+              <a v-if="selectable" href="#" @click.prevent="selectSeries(series)">{{
+                series.seriesDescription || `Series ${seriesIndex + 1}`
+              }}</a>
+              <span v-else @click.prevent="selectSeries(series)">{{
+                series.seriesDescription || `Series ${seriesIndex + 1}`
+              }}</span>
+              <span class="text-gray-500 ml-5"
+                >({{ series.instances.length }} instance{{
+                  series.instances.length === 1 ? '' : 's'
+                }}, {{ seriesAnonymizedInstances(series).length }} anonymized)</span
+              >
+              <div
+                :class="{ 'fully-anonymized': seriesFullyAnonymized(series) }"
+                class="absolute top-0 h-full series-progress"
+                :style="progressWidth(series)"
+              ></div>
+            </div>
           </li>
         </ol>
       </li>
     </ol>
-    <div class="text-gray-500 text-sm">
-      Anonymized DICOM headers of {{ anonymizedInstances.length }} of
-      {{ allInstances.length }} instances.
+    <div class="text-gray-500 text-sm mt-2">
+      Anonymized {{ anonymizedInstances.length }} of {{ allInstances.length }} instance DICOM
+      headers.
     </div>
   </div>
 </template>
@@ -49,6 +57,19 @@ const props = defineProps<{
 
 function selectSeries(series: Series) {
   emits('select-series', series);
+}
+
+function seriesAnonymizedInstances(series: Series) {
+  return series.instances.filter((i) => i.image.anonymizedDicomData);
+}
+function progressWidth(series: Series) {
+  const totalInstances = series.instances.length;
+  const anonymizedInstances = seriesAnonymizedInstances(series).length;
+  const percentAnonymized = (anonymizedInstances / totalInstances) * 100;
+  return `width: ${percentAnonymized}%`;
+}
+function seriesFullyAnonymized(series: Series) {
+  return seriesAnonymizedInstances(series).length === series.instances.length;
 }
 
 const allInstances = computed(() => {
@@ -86,3 +107,13 @@ function downloadAll() {
   });
 }
 </script>
+
+<style scoped>
+.series-progress {
+  z-index: -1;
+  @apply bg-yellow-100;
+}
+.series-progress.fully-anonymized {
+  @apply bg-green-100;
+}
+</style>

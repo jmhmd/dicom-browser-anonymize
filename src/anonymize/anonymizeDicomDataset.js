@@ -16,7 +16,7 @@ import { clearLogs, getLogs, log } from './util/logger';
  * @param {DicomDict2} dicomDataset
  * @param {Script} anonymizationScript
  */
-export default async function anonymizeDicomDataset(dicomDataset, anonymizationScript) {
+export default function anonymizeDicomDataset(dicomDataset, anonymizationScript) {
   const script = mergeScripts(basicScript, anonymizationScript);
 
   // Loop through all element rules and execute

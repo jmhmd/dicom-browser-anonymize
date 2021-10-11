@@ -48,13 +48,21 @@
       <section v-if="tab === 'input-files'">
         <h3 class="font-bold">Input DICOM files</h3>
         <p>Select DICOM files from your computer:</p>
-        <input type="file" ref="fileSelectInput" id="input-files" multiple />
+        <input
+          type="file"
+          ref="fileSelectInput"
+          id="input-files"
+          multiple
+          directory
+          webkitdirectory
+        />
         <p>Import a DICOM file from a url:</p>
         <input
           type="text"
           ref="fileUrlInput"
           id="test-file"
-          value="/dicom/CT1_J2KR"
+          placeholder="/dicom/CT1_J2KR"
+          value="/dicom/CTImage.dcm_JPEGLSLossyTransferSyntax_1.2.840.10008.1.2.4.81.dcm"
           class="
             mt-1
             block
@@ -65,7 +73,8 @@
             focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
           "
         />
-        <h3 class="font-bold">Files:</h3>
+        <div class="btn my-5" @click="loadFiles">Load</div>
+        <div>{{ loadStatus }}</div>
         <StudyList :studies="studies"></StudyList>
       </section>
       <section v-if="tab === 'anonymize'">
@@ -126,7 +135,7 @@
             <StudyList
               :studies="studies"
               selectable
-              @select-series="(series: Series) => (selectedSeries = series)"
+              @select-series="(series: Series) => {selectedSeries = series; viewerKey++;}"
             ></StudyList>
           </div>
           <div class="w-full">
@@ -169,8 +178,10 @@ import type Series from '../src/Series';
 import type Instance from '../src/Instance';
 import StudyList from '../src/StudyList.vue';
 import { logs } from '../src/logToDiv';
+import aTick from '../src/aTick';
 
 const fileUrlInput = ref<HTMLInputElement>(null);
+const fileSelectInput = ref<HTMLInputElement>(null);
 const memoryDiv = ref<HTMLElement>(null);
 const studies = ref<Study[]>([]);
 const viewerKey = ref(0);
@@ -178,12 +189,21 @@ const tab = ref('input-files');
 const showAnonScript = ref(false);
 const selectedSeries = ref<Series>(null);
 const showLogsForImageId = ref(null);
+const loadStatus = ref(null);
 
 onMounted(() => {
-  const fileUrl = fileUrlInput.value.value;
-  loadImages({ urls: [fileUrl] }, studies);
+  // const fileUrl = fileUrlInput.value.value;
+  // loadImages({ urls: [fileUrl] }, studies);
   monitorMemory(memoryDiv.value);
 });
+
+function loadFiles() {
+  const fileUrl = fileUrlInput.value.value || undefined;
+  const urls = fileUrl ? [fileUrl] : undefined;
+  const fileSelect = fileSelectInput.value.files;
+  const files = fileSelect?.length > 0 ? fileSelect : undefined;
+  loadImages({ urls, files }, studies, loadStatus);
+}
 
 const allInstances = computed(() => {
   let instances: Instance[] = [];
@@ -198,7 +218,11 @@ const anonymizedInstances = computed(() => {
   return allInstances.value.filter((i) => i.image.anonymizedDicomData);
 });
 async function anonymizeInstances() {
-  Promise.all(allInstances.value.map(anonymizeInstance));
+  // Use for...of instead of Promise.all to not attempt to anonymize serially instead of in parallel
+  for (const instance of allInstances.value) {
+    await aTick();
+    anonymizeInstance(instance);
+  }
 }
 
 function getRectangleImageCoordinates(startHandle, endHandle) {

@@ -3,7 +3,7 @@ import defaultScript from './anonymize/scripts/header-script.default';
 import logToDiv from './logToDiv';
 import Instance from './Instance';
 
-export default async function anonymizeInstance(instance: Instance) {
+export default function anonymizeInstance(instance: Instance): Instance {
   const { dicomDataset } = instance.image;
 
   if (!dicomDataset) {
@@ -11,7 +11,7 @@ export default async function anonymizeInstance(instance: Instance) {
   }
 
   console.time('anon');
-  const { dicomDataset: anonymizedDicomData, logs } = await anonymizeDicomDataset(
+  const { dicomDataset: anonymizedDicomData, logs } = anonymizeDicomDataset(
     dicomDataset,
     defaultScript
   );
@@ -19,4 +19,5 @@ export default async function anonymizeInstance(instance: Instance) {
   instance.anonymizationLogs = logs;
   console.timeEnd('anon');
   logToDiv('Anonymized headers');
+  return instance;
 }
