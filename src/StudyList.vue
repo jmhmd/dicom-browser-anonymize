@@ -1,6 +1,5 @@
 <template>
   <div>
-    <div class="btn" v-if="props.exportable" @click.prevent="downloadAll">Download all</div>
     <div class="text-gray-500 mt-5">{{ studies.length }} Studies:</div>
     <ol class="list-inside list-decimal">
       <li v-for="(study, studyIndex) in props.studies">
@@ -41,10 +40,7 @@
 <script setup lang="ts">
 import Series from './Series';
 import Study from './Study';
-import JsZip from 'jszip';
-import FileSaver from 'file-saver';
 import Instance from './Instance';
-import writeInstanceToBuffer from './writeInstanceToBuffer.js';
 import { computed } from 'vue';
 
 const emits = defineEmits(['select-series']);
@@ -52,7 +48,6 @@ const emits = defineEmits(['select-series']);
 const props = defineProps<{
   studies: Study[];
   selectable?: boolean;
-  exportable?: boolean;
 }>();
 
 function selectSeries(series: Series) {
@@ -84,28 +79,6 @@ const allInstances = computed(() => {
 const anonymizedInstances = computed(() => {
   return allInstances.value.filter((i) => i.image.anonymizedDicomData);
 });
-
-function downloadAll() {
-  let instances: Instance[] = [];
-  for (const study of props.studies) {
-    for (const series of study.series) {
-      instances = instances.concat(series.instances);
-    }
-  }
-  const blobs = instances.map((instance) => {
-    writeInstanceToBuffer(instance);
-    return new Blob([instance.image.dicomP10ArrayBuffer], { type: 'application/dicom' });
-  });
-  const zip = JsZip();
-  blobs.forEach((blob, i) => {
-    zip.file(`image-${i}.dcm`, blob);
-  });
-  zip.generateAsync({ type: 'blob' }).then((zipFile) => {
-    const currentDate = new Date().getTime();
-    const fileName = `anonymized-images-${currentDate}.zip`;
-    return FileSaver.saveAs(zipFile, fileName);
-  });
-}
 </script>
 
 <style scoped>

@@ -6,35 +6,19 @@
       <div class="flex">
         <a
           href="#"
-          @click.prevent="tab = 'input-files'"
+          @click.prevent="tab = 'process-files'"
           class="tab inline-block"
-          :class="{ 'tab-active': tab === 'input-files' }"
+          :class="{ 'tab-active': tab === 'process-files' }"
         >
-          <span>Input files</span>
+          <span>Process files</span>
         </a>
         <a
           href="#"
-          @click.prevent="tab = 'anonymize'"
+          @click.prevent="tab = 'anonymization-script'"
           class="tab inline-block"
-          :class="{ 'tab-active': tab === 'anonymize' }"
+          :class="{ 'tab-active': tab === 'anonymization-script' }"
         >
-          <span>Anonymize headers</span>
-        </a>
-        <a
-          href="#"
-          @click.prevent="tab = 'redact'"
-          class="tab inline-block"
-          :class="{ 'tab-active': tab === 'redact' }"
-        >
-          <span>Redact pixels</span>
-        </a>
-        <a
-          href="#"
-          @click.prevent="tab = 'export'"
-          class="tab inline-block"
-          :class="{ 'tab-active': tab === 'export' }"
-        >
-          <span>Export files</span>
+          <span>Anonymization Script</span>
         </a>
         <a
           href="#"
@@ -45,119 +29,119 @@
           <span>Log</span>
         </a>
       </div>
-      <section v-if="tab === 'input-files'">
-        <h3 class="font-bold">Input DICOM files</h3>
-        <p>Select DICOM files from your computer:</p>
-        <input
-          type="file"
-          ref="fileSelectInput"
-          id="input-files"
-          multiple
-          directory
-          webkitdirectory
-        />
-        <p>Import a DICOM file from a url:</p>
-        <input
-          type="text"
-          ref="fileUrlInput"
-          id="test-file"
-          placeholder="/dicom/CT1_J2KR"
-          value="/dicom/CTImage.dcm_JPEGLSLossyTransferSyntax_1.2.840.10008.1.2.4.81.dcm"
-          class="
-            mt-1
-            block
-            w-full
-            rounded-md
-            border-gray-300
-            shadow-sm
-            focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
-          "
-        />
-        <div class="btn my-5" @click="loadFiles">Load</div>
-        <div>{{ loadStatus }}</div>
-        <StudyList :studies="studies"></StudyList>
-      </section>
-      <section v-if="tab === 'anonymize'">
-        <h3 class="font-bold">Anonymizer</h3>
-        <div class="flex">
-          <div class="w-1/2">
-            <div class="mt-10">
-              <div class="btn" @click.prevent="anonymizeInstances">Anonymize all images</div>
+      <div v-if="tab === 'process-files'" class="flex">
+        <div class="w-1/2 pr-5">
+          <section>
+            <h3 class="section-head">1. Load DICOM files</h3>
+            <div class="section-content">
+              <p class="mb-2">Select files from your computer:</p>
+              <input
+                type="file"
+                ref="fileSelectInput"
+                id="input-files"
+                class="mb-5"
+                multiple
+                directory
+                webkitdirectory
+              />
+              <p>Import a file by url:</p>
+              <input
+                type="text"
+                ref="fileUrlInput"
+                id="test-file"
+                placeholder="/dicom/CT1_J2KR"
+                value="/dicom/CTImage.dcm_JPEGLSLossyTransferSyntax_1.2.840.10008.1.2.4.81.dcm"
+                class="
+                  mt-1
+                  block
+                  w-full
+                  rounded-md
+                  border-gray-300
+                  shadow-sm
+                  focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
+                "
+              />
+              <div class="btn my-5" @click="loadFiles">Load file(s)</div>
+              <div>{{ loadStatus }}</div>
             </div>
-            <StudyList :studies="studies" class="mt-10"></StudyList>
-            <div v-if="anonymizedInstances.length" class="mt-10">
-              <h3 class="font-bold">Anonymized files:</h3>
-              <div v-for="instance in anonymizedInstances">
-                imageId: {{ instance.imageId }},
-                <a
-                  href="#"
-                  @click.prevent="
-                    showLogsForImageId =
-                      showLogsForImageId === instance.imageId ? null : instance.imageId
-                  "
-                  >Logs: {{ instance.anonymizationLogs.length }}</a
+          </section>
+          <section>
+            <h3 class="section-head">2. Anonymize files</h3>
+            <div class="section-content">
+              <p>
+                <a href="#" @click.prevent="tab = 'anonymization-script'"
+                  >Show default anonymization script</a
                 >
-                <div
-                  v-if="showLogsForImageId === instance.imageId"
-                  class="bg-gray-100 p-2 border text-xs"
-                >
-                  <div v-for="log in instance.anonymizationLogs">
-                    <span class="font-bold">{{ log.level }}:</span> {{ log.message }}
+              </p>
+              <div class="btn" @click.prevent="anonymizeInstances">Anonymize all files</div>
+
+              <div v-if="anonymizedInstances.length" class="mt-10">
+                <h3 class="font-bold">Anonymized files:</h3>
+                <div v-for="instance in anonymizedInstances">
+                  imageId: {{ instance.imageId }},
+                  <a
+                    href="#"
+                    @click.prevent="
+                      showLogsForImageId =
+                        showLogsForImageId === instance.imageId ? null : instance.imageId
+                    "
+                    >Logs: {{ instance.anonymizationLogs.length }}</a
+                  >
+                  <div
+                    v-if="showLogsForImageId === instance.imageId"
+                    class="bg-gray-100 p-2 border text-xs"
+                  >
+                    <div v-for="log in instance.anonymizationLogs">
+                      <span class="font-bold">{{ log.level }}:</span> {{ log.message }}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="w-1/2">
-            <a href="#" @click.prevent="showAnonScript = !showAnonScript"
-              >Show default anonymization script</a
-            >
-            <div v-if="showAnonScript">
-              <p class="text-sm">
-                This anonymizer supports a subset of the operations implemented by the RSNA CTP
-                anonymizer. The script format has been converted to JSON, however follows the same
-                basic structure. See the
-                <a href="https://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Anonymizer"
-                  >CTP anonymizer</a
-                >
-                reference for more information.
-              </p>
-              <pre class="text-xs bg-gray-100 p-2 border">{{
-                JSON.stringify(defaultScript, null, 4)
-              }}</pre>
+          </section>
+          <section>
+            <h3 class="section-head">3. Export files:</h3>
+            <div class="section-content">
+              <div class="btn" @click.prevent="downloadAll">Download all</div>
             </div>
-          </div>
+          </section>
         </div>
-      </section>
-      <section v-if="tab === 'redact'">
-        <div class="flex">
-          <div class="w-1/3">
-            <StudyList
-              :studies="studies"
-              selectable
-              @select-series="(series: Series) => {selectedSeries = series; viewerKey++;}"
-            ></StudyList>
-          </div>
-          <div class="w-full">
-            <SeriesViewer
-              v-if="selectedSeries"
-              :series="selectedSeries"
-              redact-enabled
-              @update-redaction-boxes="updateRedaction"
-              :key="viewerKey"
-            ></SeriesViewer>
-          </div>
+        <div class="w-1/2">
+          <SeriesViewer
+            v-if="selectedSeries"
+            :series="selectedSeries"
+            redact-enabled
+            @update-redaction-boxes="updateRedaction"
+            :key="viewerKey"
+          ></SeriesViewer>
+          <StudyList
+            :studies="studies"
+            selectable
+            @select-series="(series: Series) => {selectedSeries = series; viewerKey++;}"
+          ></StudyList>
         </div>
-      </section>
-      <section v-if="tab === 'export'">
-        <h3 class="font-bold">Download files:</h3>
-        <StudyList :studies="studies" exportable class="mt-5"></StudyList>
-      </section>
-      <section v-if="tab === 'log'" id="log">
+      </div>
+      <div v-if="tab === 'anonymization-script'" id="anonymization-script">
+        <div class="w-1/2 mx-auto mt-10">
+          <p class="text-sm">
+            This anonymizer supports a subset of the operations implemented by the RSNA CTP
+            anonymizer. The script format has been converted to JSON, however follows the same basic
+            structure. See the
+            <a href="https://mircwiki.rsna.org/index.php?title=The_CTP_DICOM_Anonymizer"
+              >CTP anonymizer</a
+            >
+            reference for more information.
+          </p>
+          <pre class="text-xs bg-gray-100 p-2 border">{{
+            JSON.stringify(defaultScript, null, 4)
+          }}</pre>
+        </div>
+      </div>
+      <div v-if="tab === 'log'" id="log">
         <div v-for="log in logs">
           {{ log }}
         </div>
-      </section>
+      </div>
     </div>
   </div>
   <div ref="memoryDiv" style="position: fixed; right: 5px; bottom: 5px; background-color: white">
@@ -179,13 +163,16 @@ import type Instance from '../src/Instance';
 import StudyList from '../src/StudyList.vue';
 import { logs } from '../src/logToDiv';
 import aTick from '../src/aTick';
+import JsZip from 'jszip';
+import FileSaver from 'file-saver';
+import writeInstanceToBuffer from '../src/writeInstanceToBuffer.js';
 
 const fileUrlInput = ref<HTMLInputElement>(null);
 const fileSelectInput = ref<HTMLInputElement>(null);
 const memoryDiv = ref<HTMLElement>(null);
 const studies = ref<Study[]>([]);
 const viewerKey = ref(0);
-const tab = ref('input-files');
+const tab = ref('process-files');
 const showAnonScript = ref(false);
 const selectedSeries = ref<Series>(null);
 const showLogsForImageId = ref(null);
@@ -289,6 +276,28 @@ function updateRedaction(redactionBoxes: any) {
     viewerKey.value++;
   }
 }
+
+function downloadAll() {
+  let instances: Instance[] = [];
+  for (const study of props.studies) {
+    for (const series of study.series) {
+      instances = instances.concat(series.instances);
+    }
+  }
+  const blobs = instances.map((instance) => {
+    writeInstanceToBuffer(instance);
+    return new Blob([instance.image.dicomP10ArrayBuffer], { type: 'application/dicom' });
+  });
+  const zip = JsZip();
+  blobs.forEach((blob, i) => {
+    zip.file(`image-${i}.dcm`, blob);
+  });
+  zip.generateAsync({ type: 'blob' }).then((zipFile) => {
+    const currentDate = new Date().getTime();
+    const fileName = `anonymized-images-${currentDate}.zip`;
+    return FileSaver.saveAs(zipFile, fileName);
+  });
+}
 </script>
 
 <style scoped>
@@ -297,5 +306,11 @@ function updateRedaction(redactionBoxes: any) {
 }
 .tab-active {
   @apply border-b-0 bg-white;
+}
+.section-head {
+  @apply text-lg font-bold text-gray-600 my-5;
+}
+.section-content {
+  @apply pl-5 text-gray-900;
 }
 </style>
