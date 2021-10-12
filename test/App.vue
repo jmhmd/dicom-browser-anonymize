@@ -32,6 +32,7 @@
       <div v-if="tab === 'process-files'" class="flex">
         <div class="w-1/2 pr-5">
           <section>
+            <div class="section-overlay" v-if="step !== 'load'"></div>
             <h3 class="section-head">1. Load DICOM files</h3>
             <div class="section-content">
               <p class="mb-2">Select files from your computer:</p>
@@ -62,18 +63,32 @@
                 "
               />
               <div class="btn my-5" @click="loadFiles">Load file(s)</div>
-              <div>{{ loadStatus }}</div>
+              <div class="mb-5">{{ loadStatus }}</div>
+              <div class="btn" v-if="allInstances.length > 0" @click="nextStep">Next</div>
             </div>
           </section>
           <section>
-            <h3 class="section-head">2. Anonymize files</h3>
+            <div class="section-overlay" v-if="step !== 'redact'"></div>
+            <h3 class="section-head">2. Remove PHI from image pixel data</h3>
+            <QuarantinedSeries
+              :studies="studies"
+              @select-series="setSelectedSeries"
+            ></QuarantinedSeries>
+          </section>
+          <section>
+            <div class="section-overlay" v-if="step !== 'anonymize'"></div>
+            <h3 class="section-head">3. Anonymize files</h3>
             <div class="section-content">
-              <p>
+              <div class="mt-2">
+                Anonymized {{ anonymizedInstances.length }} of {{ allInstances.length }} instance
+                DICOM headers.
+              </div>
+              <div class="btn mt-5" @click.prevent="anonymizeInstances">Anonymize all files</div>
+              <p class="mt-5">
                 <a href="#" @click.prevent="tab = 'anonymization-script'"
                   >Show default anonymization script</a
                 >
               </p>
-              <div class="btn" @click.prevent="anonymizeInstances">Anonymize all files</div>
 
               <div v-if="anonymizedInstances.length" class="mt-10">
                 <h3 class="font-bold">Anonymized files:</h3>
@@ -100,7 +115,8 @@
             </div>
           </section>
           <section>
-            <h3 class="section-head">3. Export files:</h3>
+            <div class="section-overlay" v-if="step !== 'export'"></div>
+            <h3 class="section-head">4. Export files:</h3>
             <div class="section-content">
               <div class="btn" @click.prevent="downloadAll">Download all</div>
             </div>
@@ -117,7 +133,8 @@
           <StudyList
             :studies="studies"
             selectable
-            @select-series="(series: Series) => {selectedSeries = series; viewerKey++;}"
+            :selected-series="selectedSeries"
+            @select-series="setSelectedSeries"
           ></StudyList>
         </div>
       </div>
@@ -173,7 +190,7 @@ const memoryDiv = ref<HTMLElement>(null);
 const studies = ref<Study[]>([]);
 const viewerKey = ref(0);
 const tab = ref('process-files');
-const showAnonScript = ref(false);
+const step = ref('load');
 const selectedSeries = ref<Series>(null);
 const showLogsForImageId = ref(null);
 const loadStatus = ref(null);
@@ -184,12 +201,23 @@ onMounted(() => {
   monitorMemory(memoryDiv.value);
 });
 
-function loadFiles() {
+async function loadFiles() {
   const fileUrl = fileUrlInput.value.value || undefined;
   const urls = fileUrl ? [fileUrl] : undefined;
   const fileSelect = fileSelectInput.value.files;
   const files = fileSelect?.length > 0 ? fileSelect : undefined;
-  loadImages({ urls, files }, studies, loadStatus);
+  await loadImages({ urls, files }, studies, loadStatus);
+  setSelectedSeries(studies.value[0].series[0]);
+}
+
+function nextStep() {
+  if (step.value === 'load') {
+    step.value = 'redact';
+  } else if (step.value === 'redact') {
+    step.value = 'anonymize';
+  } else if (step.value === 'anonymize') {
+    step.value = 'export';
+  }
 }
 
 const allInstances = computed(() => {
@@ -277,9 +305,14 @@ function updateRedaction(redactionBoxes: any) {
   }
 }
 
+function setSelectedSeries(series: Series) {
+  selectedSeries.value = series;
+  viewerKey.value++;
+}
+
 function downloadAll() {
   let instances: Instance[] = [];
-  for (const study of props.studies) {
+  for (const study of studies.value) {
     for (const series of study.series) {
       instances = instances.concat(series.instances);
     }
@@ -306,6 +339,12 @@ function downloadAll() {
 }
 .tab-active {
   @apply border-b-0 bg-white;
+}
+section {
+  @apply relative p-3;
+}
+.section-overlay {
+  @apply absolute opacity-40 bg-white w-full h-full top-0 left-0;
 }
 .section-head {
   @apply text-lg font-bold text-gray-600 my-5;

@@ -207,7 +207,7 @@ const currentImageId = computed(() => {
   return currentImageId;
 });
 const currentImageQuarantined = computed(() => {
-  if (!stack.value || !props.series.quarantined) return false;
+  if (!stack.value) return false;
   const quarantinedImage = props.series.quarantined.find(
     (image) => image.imageId === currentImageId.value
   );

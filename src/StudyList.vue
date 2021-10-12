@@ -7,7 +7,12 @@
         <!-- <span class="text-gray-500 ml-5">({{ study.series.length }} series)</span> -->
         <ol class="list-inside list-decimal ml-5">
           <li v-for="(series, seriesIndex) in study.series">
-            <div class="inline-block relative">
+            <div
+              class="inline-block relative"
+              :class="{
+                selected: series.seriesInstanceUID === selectedSeries?.seriesInstanceUID,
+              }"
+            >
               <span v-if="seriesFullyAnonymized(series)"> ✔️ </span>
               <a v-if="selectable" href="#" @click.prevent="selectSeries(series)">{{
                 series.seriesDescription || `Series ${seriesIndex + 1}`
@@ -30,24 +35,19 @@
         </ol>
       </li>
     </ol>
-    <div class="text-gray-500 text-sm mt-2">
-      Anonymized {{ anonymizedInstances.length }} of {{ allInstances.length }} instance DICOM
-      headers.
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import Series from './Series';
 import Study from './Study';
-import Instance from './Instance';
-import { computed } from 'vue';
 
 const emits = defineEmits(['select-series']);
 
 const props = defineProps<{
   studies: Study[];
   selectable?: boolean;
+  selectedSeries: Series | null;
 }>();
 
 function selectSeries(series: Series) {
@@ -66,19 +66,6 @@ function progressWidth(series: Series) {
 function seriesFullyAnonymized(series: Series) {
   return seriesAnonymizedInstances(series).length === series.instances.length;
 }
-
-const allInstances = computed(() => {
-  let instances: Instance[] = [];
-  for (const study of props.studies) {
-    for (const series of study.series) {
-      instances = instances.concat(series.instances);
-    }
-  }
-  return instances;
-});
-const anonymizedInstances = computed(() => {
-  return allInstances.value.filter((i) => i.image.anonymizedDicomData);
-});
 </script>
 
 <style scoped>
@@ -88,5 +75,11 @@ const anonymizedInstances = computed(() => {
 }
 .series-progress.fully-anonymized {
   @apply bg-green-100;
+}
+
+.selected::before {
+  /* @apply border rounded-sm border-gray-500 px-2; */
+  content: '▶';
+  margin-right: 3px;
 }
 </style>

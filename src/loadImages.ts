@@ -8,6 +8,7 @@ import { cornerstone, cornerstoneWADOImageLoader } from './cornerstone/cornersto
 import Study from './Study';
 import { Ref } from 'vue';
 import aTick from './aTick';
+import shouldQuarantine from './shouldQuarantine';
 
 export default async function loadImages(
   imageSources: { urls?: string[]; files?: FileList },
@@ -20,11 +21,12 @@ export default async function loadImages(
   if (urls) {
     for (const url of urls) {
       const imageId = `wadouri:${url}`;
-      loadStatus.value = `Loading image: ${imageId}`;
+      loadStatus.value = `Loading image: ${imageId}...`;
       const image = await cornerstone.loadAndCacheImage(imageId);
       image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
       image.decompressedPixelData = image.imageFrame.pixelData;
       cornerstoneImageObjects.push(image);
+      loadStatus.value = `Loading image: ${imageId}... done`;
     }
   }
   if (files) {
@@ -36,11 +38,13 @@ export default async function loadImages(
         image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
         image.decompressedPixelData = image.imageFrame.pixelData;
         cornerstoneImageObjects.push(image);
+        loadStatus.value = `Loading image: ${imageId}... done`;
       } catch (err) {
         console.error(err);
       }
     }
   }
+  loadStatus.value = `Loaded: ${cornerstoneImageObjects.length} images.`;
 
   for (const [index, image] of cornerstoneImageObjects.entries()) {
     await aTick();
@@ -57,6 +61,9 @@ export default async function loadImages(
       console.log(JSON.parse(JSON.stringify(dicomData)));
       logToDiv('Parsed DICOM file');
       image.dicomDataset = dicomData;
+
+      // Check if image should be quarantined
+      const quarantine = shouldQuarantine(image.dicomDataset);
 
       // Sort into Study & Series
       const studyInstanceUID = dicomData.dict['0020000D']?.Value[0];
@@ -87,6 +94,7 @@ export default async function loadImages(
       series.instances.push({
         imageId: image.imageId,
         image,
+        quarantine,
       });
     } catch (err) {
       logToDiv('Failed to process DICOM');
