@@ -21,30 +21,31 @@ export default async function loadImages(
   if (urls) {
     for (const url of urls) {
       const imageId = `wadouri:${url}`;
-      loadStatus.value = `Loading image: ${imageId}...`;
+      loadStatus.value.status = `Loading image: ${imageId}...`;
       const image = await cornerstone.loadAndCacheImage(imageId);
       image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
       image.decompressedPixelData = image.imageFrame.pixelData;
       cornerstoneImageObjects.push(image);
-      loadStatus.value = `Loading image: ${imageId}... done`;
+      loadStatus.value.status = `Loading image: ${imageId}... done`;
     }
   }
   if (files) {
     for (const file of Array.from(files)) {
       try {
         const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-        loadStatus.value = `Loading image: ${imageId}`;
+        loadStatus.value.status = `Loading image: ${imageId}`;
         const image = await cornerstone.loadAndCacheImage(imageId);
         image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
         image.decompressedPixelData = image.imageFrame.pixelData;
+        image.originalFileName = file.name;
         cornerstoneImageObjects.push(image);
-        loadStatus.value = `Loading image: ${imageId}... done`;
+        loadStatus.value.status = `Loading image: ${imageId}... done`;
       } catch (err) {
         console.error(err);
       }
     }
   }
-  loadStatus.value = `Loaded: ${cornerstoneImageObjects.length} images.`;
+  loadStatus.value.status = `Loaded: ${cornerstoneImageObjects.length} images.`;
 
   for (const [index, image] of cornerstoneImageObjects.entries()) {
     await aTick();
@@ -65,37 +66,44 @@ export default async function loadImages(
       // Check if image should be quarantined
       const quarantine = shouldQuarantine(image.dicomDataset);
 
-      // Sort into Study & Series
-      const studyInstanceUID = dicomData.dict['0020000D']?.Value[0];
-      const studyDescription = dicomData.dict['00081030']?.Value[0];
+      if (quarantine && quarantine.action === 'fail') {
+        loadStatus.value.messages.push(
+          `Failed to load image "${image.originalFileName || image.imageId}": ${quarantine.reason}`
+        );
+      } else {
+        // Sort into Study & Series
+        const studyInstanceUID = dicomData.dict['0020000D']?.Value[0];
+        const studyDescription = dicomData.dict['00081030']?.Value[0];
 
-      let study = studies.value.find((s) => s.studyInstanceUID === studyInstanceUID);
-      if (!study) {
-        study = {
-          studyInstanceUID,
-          studyDescription,
-          series: [],
-        };
-        studies.value.push(study);
+        let study = studies.value.find((s) => s.studyInstanceUID === studyInstanceUID);
+        if (!study) {
+          study = {
+            studyInstanceUID,
+            studyDescription,
+            series: [],
+          };
+          studies.value.push(study);
+        }
+        const seriesInstanceUID = dicomData.dict['0020000E']?.Value[0];
+        const seriesDescription = dicomData.dict['0008103E']?.Value[0];
+        const modality = dicomData.dict['00080060']?.Value[0];
+        let series = study.series.find((s) => s.seriesInstanceUID === seriesInstanceUID);
+        if (!series) {
+          series = {
+            seriesInstanceUID,
+            seriesDescription,
+            modality,
+            instances: [],
+          };
+          study.series.push(series);
+        }
+
+        series.instances.push({
+          imageId: image.imageId,
+          image,
+          quarantine,
+        });
       }
-      const seriesInstanceUID = dicomData.dict['0020000E']?.Value[0];
-      const seriesDescription = dicomData.dict['0008103E']?.Value[0];
-      const modality = dicomData.dict['00080060']?.Value[0];
-      let series = study.series.find((s) => s.seriesInstanceUID === seriesInstanceUID);
-      if (!series) {
-        series = {
-          seriesInstanceUID,
-          seriesDescription,
-          modality,
-          instances: [],
-        };
-        study.series.push(series);
-      }
-      series.instances.push({
-        imageId: image.imageId,
-        image,
-        quarantine,
-      });
     } catch (err) {
       logToDiv('Failed to process DICOM');
       console.error(err);

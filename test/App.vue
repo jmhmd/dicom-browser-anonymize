@@ -55,17 +55,19 @@
                 "
               />
               <div class="btn my-5" @click="loadFiles">Load file(s)</div>
-              <div class="mb-5">{{ loadStatus }}</div>
+              <div class="mb-5">{{ loadStatus.status }}</div>
+              <div class="mb-5">{{ loadStatus.messages.join('\n') }}</div>
               <div class="btn" v-if="allInstances.length > 0" @click="nextStep">Next</div>
             </div>
           </section>
           <section>
             <div class="section-overlay" v-if="step !== 'redact'"></div>
             <h3 class="section-head">2. Remove PHI from image pixel data</h3>
-            <QuarantinedSeries
+            <QuarantinedSeriesList
               :studies="studies"
               @select-series="setSelectedSeries"
-            ></QuarantinedSeries>
+              @next-step="nextStep"
+            ></QuarantinedSeriesList>
           </section>
           <section>
             <div class="section-overlay" v-if="step !== 'anonymize'"></div>
@@ -175,7 +177,7 @@ import aTick from '../src/aTick';
 import JsZip from 'jszip';
 import FileSaver from 'file-saver';
 import writeInstanceToBuffer from '../src/writeInstanceToBuffer.js';
-import QuarantinedSeries from '../src/QuarantinedSeries.vue';
+import QuarantinedSeriesList from '../src/QuarantinedSeriesList.vue';
 
 const fileUrlInput = ref<HTMLInputElement>(null);
 const fileSelectInput = ref<HTMLInputElement>(null);
@@ -186,7 +188,7 @@ const tab = ref('process-files');
 const step = ref('load');
 const selectedSeries = ref<Series>(null);
 const showLogsForImageId = ref(null);
-const loadStatus = ref(null);
+const loadStatus = ref({ staus: null, messages: [] });
 
 onMounted(() => {
   // const fileUrl = fileUrlInput.value.value;
@@ -349,7 +351,7 @@ section {
   @apply relative p-3;
 }
 .section-overlay {
-  @apply absolute opacity-40 bg-white w-full h-full top-0 left-0;
+  @apply absolute opacity-40 bg-white w-full h-full top-0 left-0 z-10;
 }
 .section-head {
   @apply text-lg font-bold text-gray-600 my-5;

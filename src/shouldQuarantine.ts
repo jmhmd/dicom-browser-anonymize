@@ -42,19 +42,23 @@ function isDisallowed(dicomDataset: DicomDict2) {
     tagContainsIgnoreCase(
       elementFromName(dicomDataset, 'SOPClassUID'),
       '1.2.840.10008.5.1.4.1.1.3.1'
-    ) || // UltrasoundMultiframeImageStorage
+    ) // UltrasoundMultiframeImageStorage
+  ) {
+    return 'SOPClass UltrasoundMultiframeImageStorage not supported at this time.';
+  } else if (
     tagContainsIgnoreCase(elementFromName(dicomDataset, 'ImageType'), 'SBI') // Spectral Base Image
   ) {
-    return true;
+    return 'ImageType SBI (Spectral Base Image) not supported at this time.';
   }
   return false;
 }
 
 export default function shouldQuarantine(dicomDataset: DicomDict2) {
-  if (isDisallowed(dicomDataset)) {
+  const disallowed = isDisallowed(dicomDataset);
+  if (disallowed) {
     return {
-      reason: 'Image anonymization for this file not supported at this time.',
-      action: 'remove',
+      action: 'fail',
+      reason: disallowed,
     };
   }
 

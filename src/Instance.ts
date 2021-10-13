@@ -4,6 +4,7 @@ import ImageFrame, { TypedArray } from './ImageFrame';
 export default interface Instance {
   imageId: string;
   image: {
+    originalFileName?: string;
     anonymizedDicomData?: DicomDict2;
     dicomDataset?: DicomDict2;
     imageFrame: ImageFrame;
@@ -13,4 +14,5 @@ export default interface Instance {
   };
   anonymizationLogs?: { level: string; message: string }[];
   quarantine: false | { action: string; reason: string; attestNoPHI?: Date };
+  remove?: boolean;
 }

@@ -206,24 +206,15 @@ const currentImageId = computed(() => {
   const currentImageId = stack.value.imageIds[stack.value.currentImageIdIndex];
   return currentImageId;
 });
+const currentInstance = computed(() => {
+  return props.series.instances.find((instance) => instance.imageId === currentImageId.value);
+});
 const currentImageQuarantined = computed(() => {
   if (!stack.value) return false;
-  const quarantinedImage = props.series.quarantined.find(
-    (image) => image.imageId === currentImageId.value
-  );
-  return quarantinedImage;
+  return currentInstance.value?.quarantine;
 });
 const currentImageRemoved = computed(() => {
-  if (currentImageQuarantined.value && currentImageQuarantined.value?.remove) {
-    return true;
-  }
-  if (
-    props.series.userRemoved &&
-    props.series.userRemoved.find((f) => f.imageId === currentImageId.value)
-  ) {
-    return true;
-  }
-  return false;
+  return currentInstance.value?.remove;
 });
 // const currentImageUserRemoved = computed(() => {
 //   if (
