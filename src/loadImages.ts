@@ -1,4 +1,4 @@
-import logToDiv from './logToDiv';
+import { logToDiv } from './logToDiv';
 // import monitorMemory from './monitorMemory';
 import dcmjs from 'dcmjs';
 import DicomDict2 from './DicomDict2';
@@ -27,6 +27,7 @@ export default async function loadImages(
       image.decompressedPixelData = image.imageFrame.pixelData;
       cornerstoneImageObjects.push(image);
       loadStatus.value.status = `Loading image: ${imageId}... done`;
+      logToDiv(`${imageId}: Successfully parsed DICOM part 10`);
     }
   }
   if (files) {
@@ -40,6 +41,7 @@ export default async function loadImages(
         image.originalFileName = file.name;
         cornerstoneImageObjects.push(image);
         loadStatus.value.status = `Loading image: ${imageId}... done`;
+        logToDiv(`${imageId} (${file.name}): Successfully parsed DICOM part 10`);
       } catch (err) {
         console.error(err);
       }
@@ -49,7 +51,6 @@ export default async function loadImages(
 
   for (const [index, image] of cornerstoneImageObjects.entries()) {
     await aTick();
-    logToDiv(`Processing image ${index + 1} of ${cornerstoneImageObjects.length}`);
     let dicomData: DicomDict2;
     const { dicomP10ArrayBuffer } = image;
 
@@ -60,7 +61,6 @@ export default async function loadImages(
       console.timeEnd('parse');
 
       console.log(JSON.parse(JSON.stringify(dicomData)));
-      logToDiv('Parsed DICOM file');
       image.dicomDataset = dicomData;
 
       // Check if image should be quarantined

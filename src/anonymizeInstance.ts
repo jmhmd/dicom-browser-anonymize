@@ -1,6 +1,5 @@
 import anonymizeDicomDataset from './anonymize/anonymizeDicomDataset';
 import defaultScript from './anonymize/scripts/header-script.default';
-import logToDiv from './logToDiv';
 import Instance from './Instance';
 
 export default function anonymizeInstance(instance: Instance): Instance {
@@ -18,6 +17,5 @@ export default function anonymizeInstance(instance: Instance): Instance {
   instance.image.anonymizedDicomData = anonymizedDicomData;
   instance.anonymizationLogs = logs;
   console.timeEnd('anon');
-  logToDiv('Anonymized headers');
   return instance;
 }

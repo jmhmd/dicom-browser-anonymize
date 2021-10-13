@@ -1,6 +1,6 @@
 import getArrayBuffer from './get-array-buffer.js';
 import humanFileSize from './humanFileSize.js';
-import logToDiv from './logToDiv';
+import { logToDiv } from './logToDiv';
 
 /**
  *
@@ -23,7 +23,9 @@ export default function writeInstanceToBuffer(instance) {
   instance.image.dicomP10ArrayBuffer = anonymizedDicomData.write();
   console.timeEnd('write');
   logToDiv(
-    `Generated new P10 buffer with decompressed pixel data, size: ${humanFileSize(
+    `${
+      instance.imageId
+    }: Generated new P10 buffer with decompressed pixel data, size: ${humanFileSize(
       instance.image.dicomP10ArrayBuffer.byteLength
     )}`
   );

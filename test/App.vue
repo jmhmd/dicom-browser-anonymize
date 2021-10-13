@@ -63,19 +63,21 @@
           <section>
             <div class="section-overlay" v-if="step !== 'redact'"></div>
             <h3 class="section-head">2. Remove PHI from image pixel data</h3>
-            <QuarantinedSeriesList
-              :studies="studies"
-              @select-series="setSelectedSeries"
-              @next-step="nextStep"
-            ></QuarantinedSeriesList>
+            <div class="section-content">
+              <QuarantinedSeriesList
+                :studies="studies"
+                @select-series="setSelectedSeries"
+                @next-step="nextStep"
+              ></QuarantinedSeriesList>
+            </div>
           </section>
           <section>
             <div class="section-overlay" v-if="step !== 'anonymize'"></div>
             <h3 class="section-head">3. Anonymize files</h3>
             <div class="section-content">
               <div class="mt-2">
-                Anonymized {{ anonymizedInstances.length }} of {{ allInstances.length }} instance
-                DICOM headers.
+                Anonymized DICOM headers of {{ anonymizedInstances.length }} of
+                {{ allInstances.length }} images.
               </div>
               <div class="btn mt-5" @click.prevent="anonymizeInstances">Anonymize all files</div>
               <p class="mt-5">
@@ -83,29 +85,6 @@
                   >Show default anonymization script</a
                 >
               </p>
-
-              <div v-if="anonymizedInstances.length" class="mt-10">
-                <h3 class="font-bold">Anonymized files:</h3>
-                <div v-for="instance in anonymizedInstances">
-                  imageId: {{ instance.imageId }},
-                  <a
-                    href="#"
-                    @click.prevent="
-                      showLogsForImageId =
-                        showLogsForImageId === instance.imageId ? null : instance.imageId
-                    "
-                    >Logs: {{ instance.anonymizationLogs.length }}</a
-                  >
-                  <div
-                    v-if="showLogsForImageId === instance.imageId"
-                    class="bg-gray-100 p-2 border text-xs"
-                  >
-                    <div v-for="log in instance.anonymizationLogs">
-                      <span class="font-bold">{{ log.level }}:</span> {{ log.message }}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </section>
           <section>
@@ -149,8 +128,18 @@
         </div>
       </div>
       <div v-if="tab === 'log'" id="log">
-        <div v-for="log in logs">
-          {{ log }}
+        <div v-for="(log, index) in logs">
+          <span class="font-bold">{{ log.level }}:</span> {{ log.message }}
+          <div v-if="log.sublogs">
+            <a href="#" @click.prevent="showSublogIndex = index"
+              >{{ log.sublogs.length }} Additional logs</a
+            >
+            <div v-if="showSublogIndex === index" class="bg-gray-100 p-2 border text-xs">
+              <div v-for="log in log.sublogs">
+                <span class="font-bold">{{ log.level }}:</span> {{ log.message }}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -172,7 +161,7 @@ import anonymizeInstance from '../src/anonymizeInstance';
 import type Series from '../src/Series';
 import type Instance from '../src/Instance';
 import StudyList from '../src/StudyList.vue';
-import { logs } from '../src/logToDiv';
+import { addLog, logs } from '../src/logToDiv';
 import aTick from '../src/aTick';
 import JsZip from 'jszip';
 import FileSaver from 'file-saver';
@@ -187,8 +176,8 @@ const viewerKey = ref(0);
 const tab = ref('process-files');
 const step = ref('load');
 const selectedSeries = ref<Series>(null);
-const showLogsForImageId = ref(null);
-const loadStatus = ref({ staus: null, messages: [] });
+const showSublogIndex = ref(null);
+const loadStatus = ref({ status: null, messages: [] });
 
 onMounted(() => {
   // const fileUrl = fileUrlInput.value.value;
@@ -232,6 +221,7 @@ async function anonymizeInstances() {
   for (const instance of allInstances.value) {
     await aTick();
     anonymizeInstance(instance);
+    addLog('info', `${instance.imageId}: Anonymized headers`, instance.anonymizationLogs);
   }
 }
 
@@ -351,7 +341,7 @@ section {
   @apply relative p-3;
 }
 .section-overlay {
-  @apply absolute opacity-40 bg-white w-full h-full top-0 left-0 z-10;
+  @apply absolute opacity-60 bg-white w-full h-full top-0 left-0 z-10;
 }
 .section-head {
   @apply text-lg font-bold text-gray-600 my-5;

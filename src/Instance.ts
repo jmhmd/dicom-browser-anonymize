@@ -1,5 +1,6 @@
 import { DicomDict2 } from './anonymize/util/modifyTag';
 import ImageFrame, { TypedArray } from './ImageFrame';
+import { LogLevel } from './logToDiv';
 
 export default interface Instance {
   imageId: string;
@@ -12,7 +13,7 @@ export default interface Instance {
     decompressedPixelData: TypedArray;
     [key: string]: any;
   };
-  anonymizationLogs?: { level: string; message: string }[];
+  anonymizationLogs?: { level: LogLevel; message: string }[];
   quarantine: false | { action: string; reason: string; attestNoPHI?: Date };
   remove?: boolean;
 }

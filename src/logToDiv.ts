@@ -1,9 +1,21 @@
 import { ref } from 'vue';
 
-const logs = ref<string[]>([]);
+export type LogLevel = 'warn' | 'error' | 'info';
 
-export default function logToDiv(content: string) {
-  logs.value.unshift(content);
+interface Log {
+  level: LogLevel;
+  message: string;
+  sublogs?: Log[];
+}
+
+const logs = ref<Log[]>([]);
+
+export function logToDiv(content: string) {
+  logs.value.unshift({ level: 'info', message: content });
+}
+
+export function addLog(level: LogLevel, message: string, sublogs: Log[]) {
+  logs.value.unshift({ level, message, sublogs });
 }
 
 export { logs };
