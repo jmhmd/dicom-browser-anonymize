@@ -36,15 +36,7 @@
             <h3 class="section-head">1. Load DICOM files</h3>
             <div class="section-content">
               <p class="mb-2">Select files from your computer:</p>
-              <input
-                type="file"
-                ref="fileSelectInput"
-                id="input-files"
-                class="mb-5"
-                multiple
-                directory
-                webkitdirectory
-              />
+              <input type="file" ref="fileSelectInput" id="input-files" class="mb-5" multiple />
               <p>Import a file by url:</p>
               <input
                 type="text"
@@ -183,6 +175,7 @@ import aTick from '../src/aTick';
 import JsZip from 'jszip';
 import FileSaver from 'file-saver';
 import writeInstanceToBuffer from '../src/writeInstanceToBuffer.js';
+import QuarantinedSeries from '../src/QuarantinedSeries.vue';
 
 const fileUrlInput = ref<HTMLInputElement>(null);
 const fileSelectInput = ref<HTMLInputElement>(null);
@@ -263,13 +256,20 @@ function updateRedaction(redactionBoxes: any) {
 
     selectedSeries.value.instances.forEach((instance) => {
       const { image } = instance;
-      const { rows, columns, pixelData, pixelDataLength } = image.imageFrame as ImageFrame;
-      if (rows * columns !== pixelDataLength) {
+      const {
+        rows,
+        columns,
+        pixelData,
+        pixelDataLength,
+        photometricInterpretation,
+        // samplesPerPixel,
+      } = image.imageFrame as ImageFrame;
+
+      const effectiveSamplesPerPixel = pixelData.length / (rows * columns);
+
+      if (!Number.isInteger(effectiveSamplesPerPixel)) {
         throw new Error('Image size unknown, cannot redact');
       }
-
-      // const newPixelData = new Int16Array(pixelDataLength);
-      // image.imageFrame.pixelData = newPixelData;
 
       redactions.forEach((redaction) => {
         if (
@@ -282,12 +282,17 @@ function updateRedaction(redactionBoxes: any) {
           return;
         }
         const valueToZero = (image.imageFrame.smallestPixelValue as number) || 0;
-        const zeroingArray = Array(redaction.width).fill(valueToZero);
+        const zeroingArray = Array(redaction.width * effectiveSamplesPerPixel).fill(valueToZero);
         for (let i = 0; i < redaction.height; i++) {
-          const startIndex = (redaction.top + i) * columns + redaction.left;
+          const startIndex =
+            (redaction.top + i) * (columns * effectiveSamplesPerPixel) +
+            redaction.left * effectiveSamplesPerPixel;
           pixelData.set(zeroingArray, startIndex);
         }
       });
+
+      // const newPixelData = new Int16Array(pixelDataLength);
+      // image.imageFrame.pixelData = newPixelData;
       console.log('redacted', selectedSeries.value.instances[0].image.imageFrame.pixelData);
     });
 
