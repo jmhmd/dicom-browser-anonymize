@@ -53,7 +53,6 @@ const props = defineProps<{
 function selectSeries(series: Series) {
   emits('select-series', series);
 }
-
 function seriesAnonymizedInstances(series: Series) {
   return series.instances.filter((i) => i.image.anonymizedDicomData);
 }

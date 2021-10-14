@@ -35,26 +35,55 @@
             <div class="section-overlay" v-if="step !== 'load'"></div>
             <h3 class="section-head">1. Load DICOM files</h3>
             <div class="section-content">
-              <p class="mb-2">Select files from your computer:</p>
-              <input type="file" ref="fileSelectInput" id="input-files" class="mb-5" multiple />
-              <p>Import a file by url:</p>
-              <input
-                type="text"
-                ref="fileUrlInput"
-                id="test-file"
-                placeholder="/dicom/CT1_J2KR"
-                value="/dicom/CTImage.dcm_JPEGLSLossyTransferSyntax_1.2.840.10008.1.2.4.81.dcm"
+              <!-- <p class="mb-2">Select files from your computer:</p> -->
+              <div
+                ref="dropzone"
+                id="dropzone"
                 class="
-                  mt-1
-                  block
+                  h-24
                   w-full
-                  rounded-md
-                  border-gray-300
-                  shadow-sm
-                  focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
+                  bg-gray-200
+                  border border-dashed border-gray-400
+                  flex
+                  justify-center
+                  items-center
                 "
-              />
-              <div class="btn my-5" @click="loadFiles">Load file(s)</div>
+                :class="{ dragover: dropzoneDragOver }"
+              >
+                <div class="inline-block">
+                  Drop files here or click to select...
+                  <div v-if="fileList.length > 0">
+                    {{ fileList.length }} files selected.
+                    <a href="#" @click.prevent.stop="fileList = []">Clear all</a>
+                  </div>
+                </div>
+              </div>
+              <!-- <input type="file" ref="fileSelectInput" id="input-files" class="mb-5" multiple /> -->
+              <div>
+                <a href="#" @click.prevent="showImportByUrl = !showImportByUrl" class="text-sm"
+                  >Import by URL</a
+                >
+                <input
+                  v-show="showImportByUrl"
+                  type="text"
+                  ref="fileUrlInput"
+                  id="test-file"
+                  placeholder="/dicom/CT1_J2KR"
+                  value="/dicom/CTImage.dcm_JPEGLSLossyTransferSyntax_1.2.840.10008.1.2.4.81.dcm"
+                  class="
+                    mt-1
+                    block
+                    w-full
+                    rounded-md
+                    border-gray-300
+                    shadow-sm
+                    focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
+                  "
+                />
+              </div>
+              <div class="btn my-5" @click="loadFiles" v-if="fileList.length > 0">
+                Load file{{ fileList.length > 1 ? 's' : '' }}
+              </div>
               <div class="mb-5">{{ loadStatus.status }}</div>
               <div class="mb-5">{{ loadStatus.messages.join('\n') }}</div>
               <div class="btn" v-if="allInstances.length > 0" @click="nextStep">Next</div>
@@ -95,7 +124,7 @@
             </div>
           </section>
         </div>
-        <div class="w-1/2">
+        <div class="w-1/2 bg-gray-100 border-l border-b border-r p-5">
           <SeriesViewer
             v-if="selectedSeries"
             :series="selectedSeries"
@@ -104,11 +133,13 @@
             :key="viewerKey"
           ></SeriesViewer>
           <StudyList
+            v-if="studies.length > 0"
             :studies="studies"
             selectable
             :selected-series="selectedSeries"
             @select-series="setSelectedSeries"
           ></StudyList>
+          <div v-else class="text-sm text-gray-500">No images loaded.</div>
         </div>
       </div>
       <div v-if="tab === 'anonymization-script'" id="anonymization-script">
@@ -167,6 +198,7 @@ import JsZip from 'jszip';
 import FileSaver from 'file-saver';
 import writeInstanceToBuffer from '../src/writeInstanceToBuffer.js';
 import QuarantinedSeriesList from '../src/QuarantinedSeriesList.vue';
+import Dropzone from 'dropzone';
 
 const fileUrlInput = ref<HTMLInputElement>(null);
 const fileSelectInput = ref<HTMLInputElement>(null);
@@ -178,19 +210,40 @@ const step = ref('load');
 const selectedSeries = ref<Series>(null);
 const showSublogIndex = ref(null);
 const loadStatus = ref({ status: null, messages: [] });
+let dropzone;
+const fileList = ref<File[]>([]);
+const showImportByUrl = ref(false);
+const dropzoneDragOver = ref(false);
 
 onMounted(() => {
   // const fileUrl = fileUrlInput.value.value;
   // loadImages({ urls: [fileUrl] }, studies);
   monitorMemory(memoryDiv.value);
+  dropzone = new Dropzone('#dropzone', {
+    url: '/',
+    autoProcessQueue: false,
+    autoQueue: false,
+    disablePreviews: true,
+    accept(file: File, done: any) {
+      fileList.value.push(file);
+      done();
+    },
+  });
+  dropzone.on('dragover', () => {
+    dropzoneDragOver.value = true;
+  });
+  dropzone.on('dragleave', () => {
+    dropzoneDragOver.value = false;
+  });
 });
 
 async function loadFiles() {
+  dropzone.removeAllFiles();
   const fileUrl = fileUrlInput.value.value || undefined;
   const urls = fileUrl ? [fileUrl] : undefined;
-  const fileSelect = fileSelectInput.value.files;
-  const files = fileSelect?.length > 0 ? fileSelect : undefined;
-  await loadImages({ urls, files }, studies, loadStatus);
+  // const fileSelect = fileSelectInput.value.files;
+  // const files = fileSelect?.length > 0 ? fileSelect : undefined;
+  await loadImages({ urls, files: fileList.value }, studies, loadStatus);
   setSelectedSeries(studies.value[0].series[0]);
 }
 
@@ -341,12 +394,15 @@ section {
   @apply relative p-3;
 }
 .section-overlay {
-  @apply absolute opacity-60 bg-white w-full h-full top-0 left-0 z-10;
+  @apply absolute opacity-80 bg-white w-full h-full top-0 left-0 z-10;
 }
 .section-head {
   @apply text-lg font-bold text-gray-600 my-5;
 }
 .section-content {
   @apply pl-5 text-gray-900;
+}
+#dropzone.dragover {
+  @apply bg-green-50;
 }
 </style>

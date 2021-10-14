@@ -11,7 +11,7 @@ import aTick from './aTick';
 import shouldQuarantine from './shouldQuarantine';
 
 export default async function loadImages(
-  imageSources: { urls?: string[]; files?: FileList },
+  imageSources: { urls?: string[]; files?: File[] },
   studies: Ref<Study[]>,
   loadStatus: Ref
 ) {
@@ -31,7 +31,7 @@ export default async function loadImages(
     }
   }
   if (files) {
-    for (const file of Array.from(files)) {
+    for (const file of files) {
       try {
         const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
         loadStatus.value.status = `Loading image: ${imageId}`;
