@@ -109,11 +109,12 @@
                 {{ allInstances.length }} images.
               </div>
               <div class="btn mt-5" @click.prevent="anonymizeInstances">Anonymize all files</div>
-              <p class="mt-5">
+              <p class="my-5">
                 <a href="#" @click.prevent="tab = 'anonymization-script'"
                   >Show default anonymization script</a
                 >
               </p>
+              <div class="btn" v-if="allSeriesFullyAnonymized" @click="nextStep">Next</div>
             </div>
           </section>
           <section>
@@ -121,6 +122,9 @@
             <h3 class="section-head">4. Export files:</h3>
             <div class="section-content">
               <div class="btn" @click.prevent="downloadAll">Download all</div>
+              <div class="my-2">
+                {{ downloadStatus }}
+              </div>
             </div>
           </section>
         </div>
@@ -269,6 +273,9 @@ const allInstances = computed(() => {
 const anonymizedInstances = computed(() => {
   return allInstances.value.filter((i) => i.image.anonymizedDicomData);
 });
+const allSeriesFullyAnonymized = computed(() => {
+  return allInstances.value.length === anonymizedInstances.value.length;
+});
 async function anonymizeInstances() {
   // Use for...of instead of Promise.all to not attempt to anonymize serially instead of in parallel
   for (const instance of allInstances.value) {
@@ -360,6 +367,8 @@ function setSelectedSeries(series: Series) {
   viewerKey.value++;
 }
 
+const downloadStatus = ref<string | null>(null);
+
 function downloadAll() {
   let instances: Instance[] = [];
   for (const study of studies.value) {
@@ -367,19 +376,30 @@ function downloadAll() {
       instances = instances.concat(series.instances);
     }
   }
-  const blobs = instances.map((instance) => {
+  const blobs = instances.map((instance, i) => {
+    downloadStatus.value = `Writing instance ${i + 1} of ${instances.length} to file.`;
     writeInstanceToBuffer(instance);
     return new Blob([instance.image.dicomP10ArrayBuffer], { type: 'application/dicom' });
   });
   const zip = JsZip();
   blobs.forEach((blob, i) => {
+    downloadStatus.value = `Adding instance ${i + 1} of ${instances.length} to zip.`;
     zip.file(`image-${i}.dcm`, blob);
   });
-  zip.generateAsync({ type: 'blob' }).then((zipFile) => {
-    const currentDate = new Date().getTime();
-    const fileName = `anonymized-images-${currentDate}.zip`;
-    return FileSaver.saveAs(zipFile, fileName);
-  });
+  zip
+    .generateAsync({ type: 'blob' }, function updateCallback(metadata) {
+      let status = `Generating zip file: ${metadata.percent.toFixed(0)}%`;
+      if (metadata.currentFile) {
+        status += ` (Current file: ${metadata.currentFile})`;
+      }
+      downloadStatus.value = status;
+    })
+    .then((zipFile) => {
+      downloadStatus.value = 'Done.';
+      const currentDate = new Date().getTime();
+      const fileName = `anonymized-images-${currentDate}.zip`;
+      return FileSaver.saveAs(zipFile, fileName);
+    });
 }
 </script>
 

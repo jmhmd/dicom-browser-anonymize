@@ -8,12 +8,16 @@
         <ol class="list-inside list-decimal ml-5">
           <li v-for="(series, seriesIndex) in study.series">
             <div
-              class="inline-block relative"
+              class="inline-block absolute z-0"
               :class="{
                 selected: series.seriesInstanceUID === selectedSeries?.seriesInstanceUID,
               }"
             >
-              <span v-if="seriesFullyAnonymized(series)"> ✔️ </span>
+              <div
+                :class="{ 'fully-anonymized': seriesFullyAnonymized(series) }"
+                class="absolute top-0 h-full series-progress"
+                :style="progressWidth(series)"
+              ></div>
               <a v-if="selectable" href="#" @click.prevent="selectSeries(series)">{{
                 series.seriesDescription || `Series ${seriesIndex + 1}`
               }}</a>
@@ -25,11 +29,7 @@
                   series.instances.length === 1 ? '' : 's'
                 }}, {{ seriesAnonymizedInstances(series).length }} anonymized)</span
               >
-              <div
-                :class="{ 'fully-anonymized': seriesFullyAnonymized(series) }"
-                class="absolute top-0 h-full series-progress"
-                :style="progressWidth(series)"
-              ></div>
+              <span v-if="seriesFullyAnonymized(series)"> ✔️ </span>
             </div>
           </li>
         </ol>
