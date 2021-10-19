@@ -20,113 +20,111 @@
         >
           <span>Anonymization Script</span>
         </a>
-        <a
-          href="#"
-          @click.prevent="tab = 'log'"
-          class="tab inline-block"
-          :class="{ 'tab-active': tab === 'log' }"
-        >
-          <span>Log</span>
-        </a>
       </div>
       <div v-if="tab === 'process-files'" class="flex">
         <div class="w-1/2 pr-5">
-          <section>
-            <div class="section-overlay" v-if="step !== 'load'"></div>
-            <h3 class="section-head">1. Load DICOM files</h3>
-            <div class="section-content">
-              <!-- <p class="mb-2">Select files from your computer:</p> -->
-              <div
-                ref="dropzone"
-                id="dropzone"
-                class="
-                  h-24
-                  w-full
-                  bg-gray-200
-                  border border-dashed border-gray-400
-                  flex
-                  justify-center
-                  items-center
-                "
-                :class="{ dragover: dropzoneDragOver }"
-              >
-                <div class="inline-block">
-                  Drop files here or click to select...
-                  <div v-if="fileList.length > 0">
-                    {{ fileList.length }} files selected.
-                    <a href="#" @click.prevent.stop="fileList = []">Clear all</a>
+          <div class="p-3 border-b border-gray-300 sticky top-0 bg-white z-10">
+            <div class="absolute right-0 top-0">
+              <a href="#" @click.prevent="logsExpanded = !logsExpanded">{{
+                logsExpanded ? 'Collapse logs' : 'Expand logs'
+              }}</a>
+            </div>
+            <div class="overflow-y-auto" :class="{ 'expanded-logs': logsExpanded }">
+              <Logs :expanded="logsExpanded"></Logs>
+            </div>
+          </div>
+          <div>
+            <section>
+              <div class="section-overlay" v-if="step !== 'load'"></div>
+              <h3 class="section-head">1. Load DICOM files</h3>
+              <div class="section-content">
+                <!-- <p class="mb-2">Select files from your computer:</p> -->
+                <div
+                  ref="dropzone"
+                  id="dropzone"
+                  class="
+                    h-24
+                    w-full
+                    bg-gray-200
+                    border border-dashed border-gray-400
+                    flex
+                    justify-center
+                    items-center
+                  "
+                  :class="{ dragover: dropzoneDragOver }"
+                >
+                  <div class="inline-block">
+                    Drop files here or click to select...
+                    <div v-if="fileList.length > 0">
+                      {{ fileList.length }} files selected.
+                      <a href="#" @click.prevent.stop="fileList = []">Clear all</a>
+                    </div>
                   </div>
                 </div>
+                <!-- <input type="file" ref="fileSelectInput" id="input-files" class="mb-5" multiple /> -->
+                <div>
+                  <a href="#" @click.prevent="showImportByUrl = !showImportByUrl" class="text-sm"
+                    >Import by URL</a
+                  >
+                  <input
+                    v-show="showImportByUrl"
+                    type="text"
+                    ref="fileUrlInput"
+                    id="test-file"
+                    placeholder="/dicom/CT1_J2KR"
+                    class="
+                      mt-1
+                      block
+                      w-full
+                      rounded-md
+                      border-gray-300
+                      shadow-sm
+                      focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
+                    "
+                  />
+                </div>
+                <div class="btn my-5" @click="loadFiles" v-if="fileList.length > 0">
+                  Load file{{ fileList.length > 1 ? 's' : '' }}
+                </div>
+                <div class="btn" v-if="allInstances.length > 0" @click="nextStep">Next</div>
               </div>
-              <!-- <input type="file" ref="fileSelectInput" id="input-files" class="mb-5" multiple /> -->
-              <div>
-                <a href="#" @click.prevent="showImportByUrl = !showImportByUrl" class="text-sm"
-                  >Import by URL</a
-                >
-                <input
-                  v-show="showImportByUrl"
-                  type="text"
-                  ref="fileUrlInput"
-                  id="test-file"
-                  placeholder="/dicom/CT1_J2KR"
-                  value="/dicom/CTImage.dcm_JPEGLSLossyTransferSyntax_1.2.840.10008.1.2.4.81.dcm"
-                  class="
-                    mt-1
-                    block
-                    w-full
-                    rounded-md
-                    border-gray-300
-                    shadow-sm
-                    focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50
-                  "
-                />
+            </section>
+            <section>
+              <div class="section-overlay" v-if="step !== 'redact'"></div>
+              <h3 class="section-head">2. Remove PHI from image pixel data</h3>
+              <div class="section-content">
+                <QuarantinedSeriesList
+                  :studies="studies"
+                  @select-series="setSelectedSeries"
+                  @next-step="nextStep"
+                ></QuarantinedSeriesList>
               </div>
-              <div class="btn my-5" @click="loadFiles" v-if="fileList.length > 0">
-                Load file{{ fileList.length > 1 ? 's' : '' }}
+            </section>
+            <section>
+              <div class="section-overlay" v-if="step !== 'anonymize'"></div>
+              <h3 class="section-head">3. Anonymize files</h3>
+              <div class="section-content">
+                <div class="mt-2">
+                  Anonymized DICOM headers of {{ anonymizedInstances.length }} of
+                  {{ allInstances.length }} images.
+                </div>
+                <div class="btn mt-5" @click.prevent="anonymizeInstances">Anonymize all files</div>
+                <p class="my-5">
+                  <a href="#" @click.prevent="tab = 'anonymization-script'"
+                    >Show default anonymization script</a
+                  >
+                </p>
+                <div class="btn" v-if="allSeriesFullyAnonymized" @click="nextStep">Next</div>
               </div>
-              <div class="mb-5">{{ loadStatus.status }}</div>
-              <div class="mb-5">{{ loadStatus.messages.join('\n') }}</div>
-              <div class="btn" v-if="allInstances.length > 0" @click="nextStep">Next</div>
-            </div>
-          </section>
-          <section>
-            <div class="section-overlay" v-if="step !== 'redact'"></div>
-            <h3 class="section-head">2. Remove PHI from image pixel data</h3>
-            <div class="section-content">
-              <QuarantinedSeriesList
-                :studies="studies"
-                @select-series="setSelectedSeries"
-                @next-step="nextStep"
-              ></QuarantinedSeriesList>
-            </div>
-          </section>
-          <section>
-            <div class="section-overlay" v-if="step !== 'anonymize'"></div>
-            <h3 class="section-head">3. Anonymize files</h3>
-            <div class="section-content">
-              <div class="mt-2">
-                Anonymized DICOM headers of {{ anonymizedInstances.length }} of
-                {{ allInstances.length }} images.
+            </section>
+            <section>
+              <div class="section-overlay" v-if="step !== 'export'"></div>
+              <h3 class="section-head">4. Export files:</h3>
+              <div class="section-content">
+                <div class="btn" @click.prevent="downloadAll">Download all</div>
               </div>
-              <div class="btn mt-5" @click.prevent="anonymizeInstances">Anonymize all files</div>
-              <p class="my-5">
-                <a href="#" @click.prevent="tab = 'anonymization-script'"
-                  >Show default anonymization script</a
-                >
-              </p>
-              <div class="btn" v-if="allSeriesFullyAnonymized" @click="nextStep">Next</div>
-            </div>
-          </section>
-          <section>
-            <div class="section-overlay" v-if="step !== 'export'"></div>
-            <h3 class="section-head">4. Export files:</h3>
-            <div class="section-content">
-              <div class="btn" @click.prevent="downloadAll">Download all</div>
-              <div class="my-2">
-                {{ downloadStatus }}
-              </div>
-            </div>
-          </section>
+            </section>
+          </div>
         </div>
         <div class="w-1/2 bg-gray-100 border-l border-b border-r p-5">
           <SeriesViewer
@@ -162,21 +160,6 @@
           }}</pre>
         </div>
       </div>
-      <div v-if="tab === 'log'" id="log">
-        <div v-for="(log, index) in logs">
-          <span class="font-bold">{{ log.level }}:</span> {{ log.message }}
-          <div v-if="log.sublogs">
-            <a href="#" @click.prevent="showSublogIndex = index"
-              >{{ log.sublogs.length }} Additional logs</a
-            >
-            <div v-if="showSublogIndex === index" class="bg-gray-100 p-2 border text-xs">
-              <div v-for="log in log.sublogs">
-                <span class="font-bold">{{ log.level }}:</span> {{ log.message }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
   <div ref="memoryDiv" style="position: fixed; right: 5px; bottom: 5px; background-color: white">
@@ -196,13 +179,14 @@ import anonymizeInstance from '../src/anonymizeInstance';
 import type Series from '../src/Series';
 import type Instance from '../src/Instance';
 import StudyList from '../src/StudyList.vue';
-import { addLog, logs } from '../src/logToDiv';
+import { addLog, updateStatus } from '../src/logger';
 import aTick from '../src/aTick';
 import JsZip from 'jszip';
 import FileSaver from 'file-saver';
 import writeInstanceToBuffer from '../src/writeInstanceToBuffer.js';
 import QuarantinedSeriesList from '../src/QuarantinedSeriesList.vue';
 import Dropzone from 'dropzone';
+import Logs from '../src/Logs.vue';
 
 const fileUrlInput = ref<HTMLInputElement>(null);
 const fileSelectInput = ref<HTMLInputElement>(null);
@@ -212,12 +196,11 @@ const viewerKey = ref(0);
 const tab = ref('process-files');
 const step = ref('load');
 const selectedSeries = ref<Series>(null);
-const showSublogIndex = ref(null);
-const loadStatus = ref({ status: null, messages: [] });
 let dropzone;
 const fileList = ref<File[]>([]);
 const showImportByUrl = ref(false);
 const dropzoneDragOver = ref(false);
+const logsExpanded = ref(false);
 
 onMounted(() => {
   // const fileUrl = fileUrlInput.value.value;
@@ -247,7 +230,7 @@ async function loadFiles() {
   const urls = fileUrl ? [fileUrl] : undefined;
   // const fileSelect = fileSelectInput.value.files;
   // const files = fileSelect?.length > 0 ? fileSelect : undefined;
-  await loadImages({ urls, files: fileList.value }, studies, loadStatus);
+  await loadImages({ urls, files: fileList.value }, studies);
   setSelectedSeries(studies.value[0].series[0]);
 }
 
@@ -367,43 +350,49 @@ function setSelectedSeries(series: Series) {
   viewerKey.value++;
 }
 
-const downloadStatus = ref<string | null>(null);
-
 function downloadAll() {
-  let instances: Instance[] = [];
-  for (const study of studies.value) {
-    for (const series of study.series) {
-      instances = instances.concat(series.instances);
-    }
-  }
-  const blobs = instances.map((instance, i) => {
-    downloadStatus.value = `Writing instance ${i + 1} of ${instances.length} to file.`;
-    writeInstanceToBuffer(instance);
-    return new Blob([instance.image.dicomP10ArrayBuffer], { type: 'application/dicom' });
-  });
-  const zip = JsZip();
-  blobs.forEach((blob, i) => {
-    downloadStatus.value = `Adding instance ${i + 1} of ${instances.length} to zip.`;
-    zip.file(`image-${i}.dcm`, blob);
-  });
-  zip
-    .generateAsync({ type: 'blob' }, function updateCallback(metadata) {
-      let status = `Generating zip file: ${metadata.percent.toFixed(0)}%`;
-      if (metadata.currentFile) {
-        status += ` (Current file: ${metadata.currentFile})`;
+  try {
+    let instances: Instance[] = [];
+    for (const study of studies.value) {
+      for (const series of study.series) {
+        instances = instances.concat(series.instances);
       }
-      downloadStatus.value = status;
-    })
-    .then((zipFile) => {
-      downloadStatus.value = 'Done.';
-      const currentDate = new Date().getTime();
-      const fileName = `anonymized-images-${currentDate}.zip`;
-      return FileSaver.saveAs(zipFile, fileName);
+    }
+    const blobs = instances.map((instance, i) => {
+      updateStatus(`Writing instance ${i + 1} of ${instances.length} to file.`);
+      writeInstanceToBuffer(instance);
+      return new Blob([instance.image.dicomP10ArrayBuffer], { type: 'application/dicom' });
     });
+    const zip = JsZip();
+    blobs.forEach((blob, i) => {
+      updateStatus(`Adding instance ${i + 1} of ${instances.length} to zip.`);
+      zip.file(`image-${i}.dcm`, blob);
+    });
+    zip
+      .generateAsync({ type: 'blob' }, function updateCallback(metadata) {
+        let status = `Generating zip file: ${metadata.percent.toFixed(0)}%`;
+        if (metadata.currentFile) {
+          status += ` (Current file: ${metadata.currentFile})`;
+        }
+        updateStatus(status);
+      })
+      .then((zipFile) => {
+        updateStatus('Done.');
+        const currentDate = new Date().getTime();
+        const fileName = `anonymized-images-${currentDate}.zip`;
+        return FileSaver.saveAs(zipFile, fileName);
+      });
+  } catch (err) {
+    const errMessage = err.message || err.error?.message;
+    if (errMessage && typeof errMessage === 'string') {
+      addLog('error', `Error generating zip: ${errMessage}`);
+    }
+    console.error(err);
+  }
 }
 </script>
 
-<style scoped>
+<style scoped lang="postcss">
 .tab {
   @apply flex-grow text-center bg-gray-200 border border-gray-500 text-black;
 }
@@ -424,5 +413,8 @@ section {
 }
 #dropzone.dragover {
   @apply bg-green-50;
+}
+.expanded-logs {
+  height: 80vh;
 }
 </style>

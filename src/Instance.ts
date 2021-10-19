@@ -1,6 +1,6 @@
 import { DicomDict2 } from './anonymize/util/modifyTag';
 import ImageFrame, { TypedArray } from './ImageFrame';
-import { LogLevel } from './logToDiv';
+import { LogLevel } from './logger';
 
 export default interface Instance {
   imageId: string;

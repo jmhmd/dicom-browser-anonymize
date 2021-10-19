@@ -1,4 +1,4 @@
-import { logToDiv } from './logToDiv';
+import { addLog, updateStatus } from './logger';
 // import monitorMemory from './monitorMemory';
 import dcmjs from 'dcmjs';
 import DicomDict2 from './DicomDict2';
@@ -12,42 +12,57 @@ import shouldQuarantine from './shouldQuarantine';
 
 export default async function loadImages(
   imageSources: { urls?: string[]; files?: File[] },
-  studies: Ref<Study[]>,
-  loadStatus: Ref
+  studies: Ref<Study[]>
 ) {
   const { urls, files } = imageSources;
   let cornerstoneImageObjects: any[] = [];
+  let urlsAndFiles: (string | File)[] = [];
 
   if (urls) {
-    for (const url of urls) {
-      const imageId = `wadouri:${url}`;
-      loadStatus.value.status = `Loading image: ${imageId}...`;
+    urlsAndFiles = urlsAndFiles.concat(urls);
+  }
+  if (files) {
+    urlsAndFiles = urlsAndFiles.concat(files);
+  }
+
+  for (const urlOrFile of urlsAndFiles) {
+    let imageId: string;
+    let file: File | undefined = undefined;
+
+    if (typeof urlOrFile === 'string') {
+      imageId = `wadouri:${urlOrFile}`;
+    } else {
+      file = urlOrFile;
+      imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
+    }
+
+    updateStatus(`Loading image: ${imageId}`);
+
+    try {
       const image = await cornerstone.loadAndCacheImage(imageId);
       image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
       image.decompressedPixelData = image.imageFrame.pixelData;
-      cornerstoneImageObjects.push(image);
-      loadStatus.value.status = `Loading image: ${imageId}... done`;
-      logToDiv(`${imageId}: Successfully parsed DICOM part 10`);
-    }
-  }
-  if (files) {
-    for (const file of files) {
-      try {
-        const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(file);
-        loadStatus.value.status = `Loading image: ${imageId}`;
-        const image = await cornerstone.loadAndCacheImage(imageId);
-        image.dicomP10ArrayBuffer = image.data.byteArray.buffer;
-        image.decompressedPixelData = image.imageFrame.pixelData;
+      if (file) {
         image.originalFileName = file.name;
-        cornerstoneImageObjects.push(image);
-        loadStatus.value.status = `Loading image: ${imageId}... done`;
-        logToDiv(`${imageId} (${file.name}): Successfully parsed DICOM part 10`);
-      } catch (err) {
-        console.error(err);
       }
+      cornerstoneImageObjects.push(image);
+      updateStatus(`Loading image: ${imageId}... done`);
+      addLog(
+        'info',
+        `${imageId}${file ? ` (${file.name})` : ''}: Successfully parsed DICOM part 10`
+      );
+    } catch (err: any) {
+      if (err?.error?.message && typeof err.error.message === 'string') {
+        addLog(
+          'error',
+          `Error parsing file ${imageId}${file ? ` (${file.name})` : ''}: ${err.error.message}`
+        );
+      }
+      console.error(err);
     }
   }
-  loadStatus.value.status = `Loaded: ${cornerstoneImageObjects.length} images.`;
+
+  updateStatus(`Loaded: ${cornerstoneImageObjects.length} images.`);
 
   for (const [index, image] of cornerstoneImageObjects.entries()) {
     await aTick();
@@ -56,18 +71,17 @@ export default async function loadImages(
 
     try {
       // Parse DICOM
-      console.time('parse');
       dicomData = dcmjs.data.DicomMessage.readFile(dicomP10ArrayBuffer);
-      console.timeEnd('parse');
 
-      console.log(JSON.parse(JSON.stringify(dicomData)));
       image.dicomDataset = dicomData;
 
       // Check if image should be quarantined
       const quarantine = shouldQuarantine(image.dicomDataset);
 
+      // If quarantine check results in 'fail' action, don't further process the file
       if (quarantine && quarantine.action === 'fail') {
-        loadStatus.value.messages.push(
+        addLog(
+          'error',
           `Failed to load image "${image.originalFileName || image.imageId}": ${quarantine.reason}`
         );
       } else {
@@ -103,14 +117,25 @@ export default async function loadImages(
           image,
           quarantine,
         });
+
+        addLog('info', `Parsed DICOM dataset for file ${image.originalFileName || image.imageId}`);
       }
-    } catch (err) {
-      logToDiv('Failed to process DICOM');
+    } catch (err: any) {
+      const errMessage = err.message || err.error?.message;
+      if (errMessage && typeof errMessage === 'string') {
+        addLog(
+          'error',
+          `Error parsing file ${image.originalFileName || image.imageId} with dcmjs: ${errMessage}`
+        );
+      }
       console.error(err);
     }
   }
 
+  updateStatus(`Parsed: ${cornerstoneImageObjects.length} images.`);
+
   // Sort series instances by instanceNumber
+  updateStatus(`Sorting images...`);
   for (const study of studies.value) {
     for (const series of study.series) {
       series.instances.sort((a, b) => {
@@ -127,4 +152,5 @@ export default async function loadImages(
       });
     }
   }
+  updateStatus(`Sorting images... done.`);
 }
