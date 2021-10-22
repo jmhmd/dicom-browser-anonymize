@@ -254,19 +254,16 @@ import Dropzone from 'dropzone';
 import Logs from './Logs.vue';
 
 const fileUrlInput = ref<HTMLInputElement | null>(null);
-// const fileSelectInput = ref<HTMLInputElement>(null);
 const memoryDiv = ref<HTMLElement | null>(null);
 const studies = ref<Study[]>([]);
 const viewerKey = ref(0);
 const tab = ref('process-files');
 const step = ref('load');
 const selectedSeries = ref<Series | null>(null);
-let dropzone: Dropzone;
 const fileList = ref<File[]>([]);
 const showImportByUrl = ref(false);
 const dropzoneDragOver = ref(false);
 const logsExpanded = ref(false);
-// const genericProgress = ref({ numDone: 0, numTotal: 0 });
 
 onMounted(() => {
   // const fileUrl = fileUrlInput.value.value;
@@ -274,7 +271,7 @@ onMounted(() => {
   if (memoryDiv.value) {
     monitorMemory(memoryDiv.value);
   }
-  dropzone = new Dropzone('#dropzone', {
+  const dropzone = new Dropzone('#dropzone', {
     url: '/',
     autoProcessQueue: false,
     autoQueue: false,
@@ -291,10 +288,18 @@ onMounted(() => {
   dropzone.on('dragleave', () => {
     dropzoneDragOver.value = false;
   });
+  // Doing this instead of keeping a reference to the dropzone object because for some reason after
+  // minification, other references to the dropzone object turn into just the HTML element so none
+  // of the functions are defined...??? Must be some side effect of `script setup` or reactivity.
+  // This works well enough.
+  document.addEventListener('clear-dropzone', () => {
+    console.log('clearing dropzone');
+    dropzone.removeAllFiles();
+  });
 });
 
 async function loadFiles() {
-  dropzone.removeAllFiles();
+  document.dispatchEvent(new Event('clear-dropzone'));
   const fileUrl = fileUrlInput.value?.value;
   const urls = fileUrl ? [fileUrl] : undefined;
   // const fileSelect = fileSelectInput.value.files;
