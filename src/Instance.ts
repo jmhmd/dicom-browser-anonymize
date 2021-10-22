@@ -1,4 +1,4 @@
-import { DicomDict2 } from './anonymize/util/modifyTag';
+import DicomDict2 from './DicomDict2';
 import ImageFrame, { TypedArray } from './ImageFrame';
 import { LogLevel } from './logger';
 
