@@ -248,7 +248,7 @@ import { addLog, updateStatus, progressBar } from './logger';
 import aTick from './aTick';
 import JsZip from 'jszip';
 import FileSaver from 'file-saver';
-import writeInstanceToBuffer from './writeInstanceToBuffer.js';
+import writeInstanceToBuffer from './writeInstanceToBuffer';
 import QuarantinedSeriesList from './QuarantinedSeriesList.vue';
 import Dropzone from 'dropzone';
 import Logs from './Logs.vue';
