@@ -6,7 +6,7 @@
         {{ study.studyDescription || `Study ${studyIndex + 1}` }}
         <!-- <span class="text-gray-500 ml-5">({{ study.series.length }} series)</span> -->
         <ol class="list-inside list-decimal ml-5">
-          <li v-for="(series, seriesIndex) in study.series">
+          <li v-for="(series, seriesIndex) in study.series" class="relative">
             <div
               class="inline-block absolute z-0"
               :class="{
@@ -29,6 +29,10 @@
                   series.instances.length === 1 ? '' : 's'
                 }}, {{ seriesAnonymizedInstances(series).length }} anonymized)</span
               >
+              <span class="text-red-500 ml-5" v-if="anonymizationErrors(series) > 0">
+                ({{ anonymizationErrors(series) }} anonymization errors. See logs for more
+                information.)
+              </span>
               <span v-if="seriesFullyAnonymized(series)"> ✓ </span>
             </div>
           </li>
@@ -64,6 +68,15 @@ function progressWidth(series: Series) {
 }
 function seriesFullyAnonymized(series: Series) {
   return seriesAnonymizedInstances(series).length === series.instances.length;
+}
+function anonymizationErrors(series: Series) {
+  const seriesErrorCount = series.instances.reduce((errCount, instance) => {
+    if (instance.anonymizationError) {
+      return (errCount += 1);
+    }
+    return errCount;
+  }, 0);
+  return seriesErrorCount;
 }
 </script>
 

@@ -340,11 +340,15 @@ async function anonymizeInstances() {
       anonymizeInstance(instance);
       addLog('info', `${instance.imageId}: Anonymized headers`, instance.anonymizationLogs);
     } catch (err: any) {
-      const errMessage = err.message || err.error?.message;
+      const errMessage =
+        err.message || err.error?.message || JSON.stringify(err, Object.getOwnPropertyNames(err));
       if (errMessage && typeof errMessage === 'string') {
-        addLog('error', `Error generating zip: ${errMessage}`);
         addLog('error', `Error anonymizing image ${instance.imageId}: ${errMessage}`);
+      } else {
+        addLog('error', `Error anonymizing image ${instance.imageId}: Unknown error`);
       }
+      instance.anonymizationError = true;
+      delete instance.image.anonymizedDicomData;
       console.error(err);
     } finally {
       progressBar.value.numDone += 1;

@@ -9,13 +9,11 @@ export default function anonymizeInstance(instance: Instance): Instance {
     throw new Error(`No dicom dataset found for instance with imageId: ${instance.imageId}`);
   }
 
-  console.time('anon');
   const { dicomDataset: anonymizedDicomData, logs } = anonymizeDicomDataset(
     dicomDataset,
     defaultScript
   );
   instance.image.anonymizedDicomData = anonymizedDicomData;
   instance.anonymizationLogs = logs;
-  console.timeEnd('anon');
   return instance;
 }

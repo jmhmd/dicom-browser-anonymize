@@ -94,7 +94,7 @@ export default function resolveOperation(rule, script, dicomDataset) {
   }
 
   if (operationName === 'hashdate') {
-    const [dateToIncrement, valueToHashForIncrement] = resolveParams(rule, script, dicomDataset);
+    let [dateToIncrement, valueToHashForIncrement] = resolveParams(rule, script, dicomDataset);
     if (dateToIncrement === '') {
       log(
         'warn',
@@ -108,6 +108,9 @@ export default function resolveOperation(rule, script, dicomDataset) {
       //   )}. Setting element value to empty string.`
       // );
       return ['upsert', ''];
+    }
+    if (valueToHashForIncrement === '') {
+      valueToHashForIncrement = 'null';
     }
     if (
       !dateToIncrement ||

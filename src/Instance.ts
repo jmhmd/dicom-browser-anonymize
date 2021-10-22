@@ -14,6 +14,7 @@ export default interface Instance {
     [key: string]: any;
   };
   anonymizationLogs?: { level: LogLevel; message: string }[];
+  anonymizationError?: boolean;
   quarantine: false | { action: string; reason: string; attestNoPHI?: Date };
   remove?: boolean;
 }
