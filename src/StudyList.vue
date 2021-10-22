@@ -1,6 +1,5 @@
 <template>
   <div>
-    <div class="btn" v-if="props.exportable" @click.prevent="downloadAll">Download all</div>
     <div class="text-gray-500 mt-5">{{ studies.length }} Studies:</div>
     <ol class="list-inside list-decimal">
       <li v-for="(study, studyIndex) in props.studies">
@@ -8,8 +7,17 @@
         <!-- <span class="text-gray-500 ml-5">({{ study.series.length }} series)</span> -->
         <ol class="list-inside list-decimal ml-5">
           <li v-for="(series, seriesIndex) in study.series">
-            <div class="inline-block relative">
-              <span v-if="seriesFullyAnonymized(series)"> ✔️ </span>
+            <div
+              class="inline-block absolute z-0"
+              :class="{
+                selected: series.seriesInstanceUID === selectedSeries?.seriesInstanceUID,
+              }"
+            >
+              <div
+                :class="{ 'fully-anonymized': seriesFullyAnonymized(series) }"
+                class="absolute top-0 h-full series-progress"
+                :style="progressWidth(series)"
+              ></div>
               <a v-if="selectable" href="#" @click.prevent="selectSeries(series)">{{
                 series.seriesDescription || `Series ${seriesIndex + 1}`
               }}</a>
@@ -21,44 +29,30 @@
                   series.instances.length === 1 ? '' : 's'
                 }}, {{ seriesAnonymizedInstances(series).length }} anonymized)</span
               >
-              <div
-                :class="{ 'fully-anonymized': seriesFullyAnonymized(series) }"
-                class="absolute top-0 h-full series-progress"
-                :style="progressWidth(series)"
-              ></div>
+              <span v-if="seriesFullyAnonymized(series)"> ✓ </span>
             </div>
           </li>
         </ol>
       </li>
     </ol>
-    <div class="text-gray-500 text-sm mt-2">
-      Anonymized {{ anonymizedInstances.length }} of {{ allInstances.length }} instance DICOM
-      headers.
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import Series from './Series';
 import Study from './Study';
-import JsZip from 'jszip';
-import FileSaver from 'file-saver';
-import Instance from './Instance';
-import writeInstanceToBuffer from './writeInstanceToBuffer.js';
-import { computed } from 'vue';
 
 const emits = defineEmits(['select-series']);
 
 const props = defineProps<{
   studies: Study[];
   selectable?: boolean;
-  exportable?: boolean;
+  selectedSeries: Series | null;
 }>();
 
 function selectSeries(series: Series) {
   emits('select-series', series);
 }
-
 function seriesAnonymizedInstances(series: Series) {
   return series.instances.filter((i) => i.image.anonymizedDicomData);
 }
@@ -71,41 +65,6 @@ function progressWidth(series: Series) {
 function seriesFullyAnonymized(series: Series) {
   return seriesAnonymizedInstances(series).length === series.instances.length;
 }
-
-const allInstances = computed(() => {
-  let instances: Instance[] = [];
-  for (const study of props.studies) {
-    for (const series of study.series) {
-      instances = instances.concat(series.instances);
-    }
-  }
-  return instances;
-});
-const anonymizedInstances = computed(() => {
-  return allInstances.value.filter((i) => i.image.anonymizedDicomData);
-});
-
-function downloadAll() {
-  let instances: Instance[] = [];
-  for (const study of props.studies) {
-    for (const series of study.series) {
-      instances = instances.concat(series.instances);
-    }
-  }
-  const blobs = instances.map((instance) => {
-    writeInstanceToBuffer(instance);
-    return new Blob([instance.image.dicomP10ArrayBuffer], { type: 'application/dicom' });
-  });
-  const zip = JsZip();
-  blobs.forEach((blob, i) => {
-    zip.file(`image-${i}.dcm`, blob);
-  });
-  zip.generateAsync({ type: 'blob' }).then((zipFile) => {
-    const currentDate = new Date().getTime();
-    const fileName = `anonymized-images-${currentDate}.zip`;
-    return FileSaver.saveAs(zipFile, fileName);
-  });
-}
 </script>
 
 <style scoped>
@@ -115,5 +74,13 @@ function downloadAll() {
 }
 .series-progress.fully-anonymized {
   @apply bg-green-100;
+}
+
+.selected::before {
+  /* @apply border rounded-sm border-gray-500 px-2; */
+  content: '➤';
+  margin-right: 3px;
+  position: absolute;
+  left: -35px;
 }
 </style>

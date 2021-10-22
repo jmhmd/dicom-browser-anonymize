@@ -15,6 +15,7 @@
     "date-fns": "^2.24.0",
     "dcmjs": "^0.18.8",
     "dicom-parser": "^1.8.8",
+    "dropzone": "^5.9.3",
     "file-saver": "^2.0.5",
     "hammerjs": "^2.0.8",
     "jszip": "^3.7.1",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.3.3",
+    "@types/dropzone": "^5.7.4",
     "@types/file-saver": "^2.0.3",
     "@types/hammerjs": "^2.0.40",
     "@types/md5": "^2.3.1",

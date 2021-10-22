@@ -47,7 +47,7 @@ export default function anonymizeDicomDataset(dicomDataset, anonymizationScript)
     }
 
     // Remove all sequences
-    if (datasetElement.vr === 'SQ') {
+    if (datasetElement.vr === 'SQ' && script.options.sequenceAction === 'remove') {
       removeTag(dicomDataset, tag);
       continue;
     }

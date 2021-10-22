@@ -8,6 +8,12 @@
 .btn:hover {
   @apply bg-gray-300 cursor-pointer;
 }
+.btn-primary {
+  @apply bg-green-200 border border-green-300;
+}
+.btn-primary:hover {
+  @apply bg-green-300;
+}
 
 a {
   @apply text-blue-600;

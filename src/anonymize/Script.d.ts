@@ -26,6 +26,9 @@ export interface ScriptVariable {
   value: string;
 }
 
+// TODO: #3 Make the removeCurves and removeOverlays options work. 'removeOverlays' is partially
+// respected in 'shouldPreserveElement' function, but should check whether CTP always deletes when
+// this option is set
 export interface ScriptOptions {
   sequenceAction: string;
   removeDisabled: boolean;

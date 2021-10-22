@@ -10,13 +10,21 @@
         <button
           v-if="!redacting"
           :disabled="series.reviewed ? true : currentImageRemoved"
-          class="btn btn-blue mt-5 mx-1 pt-1 flex-1"
+          class="btn mt-5 mx-1 pt-1 flex-1"
           @click="startRedacting"
         >
-          Edit image redactions
+          Add image redactions
         </button>
-        <button v-if="redacting" class="btn btn-green mt-5 mx-1 pt-1 flex-1" @click="stopRedacting">
-          Save
+        <button v-if="redacting" class="btn mt-5 mx-1 pt-1 flex-1" @click="stopRedacting">
+          <span v-if="hasRedactions">Apply redactions to series</span>
+          <span v-else>Cancel redaction</span>
+        </button>
+        <button
+          v-if="redacting && hasRedactions"
+          class="btn mt-5 mx-1 pt-1 flex-1"
+          @click="clearRedactionBoxes"
+        >
+          Clear redactions
         </button>
       </div>
     </div>
@@ -190,32 +198,23 @@ const numImagesTotal = computed(() => {
 //   if (!stack.value) return false;
 //   return numImagesDisplayed.value >= numImagesTotal.value;
 // });
-// const hasRedactions = computed(() => {
-//   return props.series.redactionBoxes && props.series.redactionBoxes.length > 0;
-// });
+const hasRedactions = computed(() => {
+  return redactionBoxes.value && redactionBoxes.value.length > 0;
+});
 const currentImageId = computed(() => {
   if (!stack.value) return false;
   const currentImageId = stack.value.imageIds[stack.value.currentImageIdIndex];
   return currentImageId;
 });
+const currentInstance = computed(() => {
+  return props.series.instances.find((instance) => instance.imageId === currentImageId.value);
+});
 const currentImageQuarantined = computed(() => {
-  if (!stack.value || !props.series.quarantined) return false;
-  const quarantinedImage = props.series.quarantined.find(
-    (image) => image.imageId === currentImageId.value
-  );
-  return quarantinedImage;
+  if (!stack.value) return false;
+  return currentInstance.value?.quarantine;
 });
 const currentImageRemoved = computed(() => {
-  if (currentImageQuarantined.value && currentImageQuarantined.value?.remove) {
-    return true;
-  }
-  if (
-    props.series.userRemoved &&
-    props.series.userRemoved.find((f) => f.imageId === currentImageId.value)
-  ) {
-    return true;
-  }
-  return false;
+  return currentInstance.value?.remove;
 });
 // const currentImageUserRemoved = computed(() => {
 //   if (
@@ -246,6 +245,13 @@ function stopRedacting() {
   });
 
   emit('updateRedactionBoxes', redactionBoxes.value);
+}
+
+function clearRedactionBoxes() {
+  redactionBoxes.value = [];
+  copyToAllImages();
+  const element = canvas.value; // use built-in vue refs to access DOM element
+  cornerstone.updateImage(element);
 }
 </script>
 
