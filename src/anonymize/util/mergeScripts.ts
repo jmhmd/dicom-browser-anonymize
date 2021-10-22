@@ -1,9 +1,6 @@
-/**
- *
- * @param {import("../Script").default} script1
- * @param {import("../Script").default} script2
- */
-export default function mergeScripts(script1, script2) {
+import Script from '../Script';
+
+export default function mergeScripts(script1: Script, script2: Script) {
   for (const variable of script2.variables) {
     const existing = script1.variables.find((v) => v.name === variable.name);
     if (existing) {

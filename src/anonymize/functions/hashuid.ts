@@ -6,7 +6,7 @@ import getMD5HashBase10 from '../util/getMD5HashBase10';
  * @param {string} value Value to be hashed
  * @returns
  */
-export default function hashuid(root, value) {
+export default function hashuid(root: string, value: string) {
   if (!root || typeof root !== 'string') {
     throw new Error('Root parameter for "hashuid" must be a string.');
   }

@@ -1,22 +1,16 @@
-import { nameToTag } from './dicomDictionary.js';
-import getScriptParameter from './getScriptParameter.js';
-import { log } from './logger.js';
-import resolveOperation from './resolveOperation.js';
+import DicomDict2 from '../../DicomDict2';
+import Script, { OperationParameter, ScriptRule } from '../Script';
+import { nameToTag } from './dicomDictionary';
+import getScriptParameter from './getScriptParameter';
+import { log } from './logger';
+import resolveOperation from './resolveOperation';
 
-/**
- * @typedef {import('../Script').default} Script
- * @typedef {import('../Script').ScriptRule} Rule
- * @typedef {import("../../DicomDict2").default} DicomDict2
- */
-
-/**
- *
- * @param {import('../Script').OperationParameter} param
- * @param {Rule} rule
- * @param {Script} script
- * @param {DicomDict2} dicomDataset
- */
-function resolveParam(param, rule, script, dicomDataset) {
+function resolveParam(
+  param: OperationParameter,
+  rule: ScriptRule,
+  script: Script,
+  dicomDataset: DicomDict2
+) {
   if (typeof param === 'object') {
     return resolveOperation(rule, script, dicomDataset);
   }
@@ -57,7 +51,11 @@ function resolveParam(param, rule, script, dicomDataset) {
  * @param {DicomDict2} dicomDataset Parsed dicom dataset
  * @returns {(string | number | string[])[]}
  */
-export function resolveParams(rule, script, dicomDataset) {
+export function resolveParams(
+  rule: ScriptRule,
+  script: Script,
+  dicomDataset: DicomDict2
+): (string | number | string[])[] {
   const { operationParameters } = rule.operation;
   if (!operationParameters || !Array.isArray(operationParameters)) {
     return [];

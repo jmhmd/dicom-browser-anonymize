@@ -5,7 +5,7 @@ import md5 from 'md5';
  * @param {string} value Value to hash
  * @returns {string}
  */
-export default function getMD5HashBase10(value) {
+export default function getMD5HashBase10(value: string) {
   // Calculate md5 hash of uid
   const hashedUID = md5(value);
   // Convert md5 hex string to base 10 numeric string

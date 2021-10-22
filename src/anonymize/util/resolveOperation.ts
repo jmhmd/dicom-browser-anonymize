@@ -1,22 +1,16 @@
-/**
- * @typedef {import('../Script').default} Script
- * @typedef {import('../Script').ScriptRule} Rule
- * @typedef {import('../../DicomDict2').default} DicomDict2
- * @typedef {'upsert' | 'empty' | 'keep' | 'remove' | 'append'} Operation
- */
+type Operation = 'upsert' | 'empty' | 'keep' | 'remove' | 'append';
 
 import { resolveParams } from './resolveParams';
 import anonFunctions from '../functions';
 import { log } from './logger';
+import Script, { ScriptRule } from '../Script';
+import DicomDict2 from '../../DicomDict2';
 
-/**
- *
- * @param {Rule} rule
- * @param {Script} script
- * @param {DicomDict2} dicomDataset
- * @returns {[Operation, string?]} Array [operation, value?]
- */
-export default function resolveOperation(rule, script, dicomDataset) {
+export default function resolveOperation(
+  rule: ScriptRule,
+  script: Script,
+  dicomDataset: DicomDict2
+): [Operation, string?] {
   const { tag } = rule;
   const { operationName } = rule.operation;
 

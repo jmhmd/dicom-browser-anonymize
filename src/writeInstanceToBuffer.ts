@@ -1,4 +1,4 @@
-import getArrayBuffer from './get-array-buffer.js';
+import getArrayBuffer from './get-array-buffer';
 import humanFileSize from './humanFileSize.js';
 import Instance from './Instance.js';
 import isColorImage from './isColorImage';

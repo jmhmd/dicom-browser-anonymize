@@ -5,18 +5,13 @@ import basicScript from './scripts/header-script.DICOM-PS3.15-Basic';
 import processRule from './processRule';
 import mergeScripts from './util/mergeScripts';
 import { clearLogs, getLogs, log } from './util/logger';
+import DicomDict2 from '../DicomDict2';
+import Script from './Script';
 
-/**
- * @typedef { import("../DicomDict2").default } DicomDict2
- * @typedef { import("./Script").default} Script
- */
-
-/**
- * Anonymize a parsed dicom dataset
- * @param {DicomDict2} dicomDataset
- * @param {Script} anonymizationScript
- */
-export default function anonymizeDicomDataset(dicomDataset, anonymizationScript) {
+export default function anonymizeDicomDataset(
+  dicomDataset: DicomDict2,
+  anonymizationScript: Script
+) {
   const script = mergeScripts(basicScript, anonymizationScript);
 
   // Loop through all element rules and execute

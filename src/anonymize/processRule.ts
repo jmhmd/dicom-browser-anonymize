@@ -1,20 +1,10 @@
-/**
- * @typedef {import('./Script').default} Script
- * @typedef {import('./Script').ScriptRule} Rule
- * @typedef {import('../DicomDict2').default} DicomDict2
- */
-
 import { addTag, emptyTag, removeTag, replaceTag } from './util/modifyTag';
 import resolveOperation from './util/resolveOperation';
-import { log } from './util/logger.js';
+import { log } from './util/logger';
+import Script, { ScriptRule } from './Script';
+import DicomDict2 from '../DicomDict2';
 
-/**
- *
- * @param {Rule} rule
- * @param {Script} script
- * @param {DicomDict2} dicomDataset
- */
-export default function processRule(rule, script, dicomDataset) {
+export default function processRule(rule: ScriptRule, script: Script, dicomDataset: DicomDict2) {
   const options = script.options;
   const { tag } = rule;
   const datasetElement = dicomDataset.dict[tag] || dicomDataset.meta[tag];

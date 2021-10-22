@@ -7,7 +7,7 @@ import getMD5HashBase10 from '../util/getMD5HashBase10';
  * @param {string} hashDateValue Value to use to create date offset
  * @returns {string}
  */
-export default function hashdate(dateValue, hashDateValue) {
+export default function hashdate(dateValue: string, hashDateValue: string) {
   // Generate hash
   if (!dateValue || !hashDateValue) {
     throw new Error(

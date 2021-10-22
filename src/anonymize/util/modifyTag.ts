@@ -1,8 +1,5 @@
-/**
- * @typedef {import("../../DicomDict2").default} DicomDict2
- */
-
-import { getTagVr } from './dicomDictionary.js';
+import { getTagVr } from './dicomDictionary';
+import DicomDict2 from '../../DicomDict2';
 
 /**
  * Remove a tag from the DICOM dataset
@@ -10,7 +7,7 @@ import { getTagVr } from './dicomDictionary.js';
  * @param {string} tag Numeric unpunctuated DICOM tag
  * @returns {void}
  */
-export function removeTag(dicomDataset, tag) {
+export function removeTag(dicomDataset: DicomDict2, tag: string) {
   delete dicomDataset.dict[tag];
   return;
 }
@@ -22,7 +19,7 @@ export function removeTag(dicomDataset, tag) {
  * @param {string} vr Valur representation of the tag
  * @returns {void}
  */
-export function emptyTag(dicomDataset, tag, vr) {
+export function emptyTag(dicomDataset: DicomDict2, tag: string, vr: string) {
   dicomDataset.upsertTag(tag, vr, ['']);
   return;
 }
@@ -35,7 +32,7 @@ export function emptyTag(dicomDataset, tag, vr) {
  * @param {any} value Value to set for the tag
  * @returns {void}
  */
-export function replaceTag(dicomDataset, tag, vr, value) {
+export function replaceTag(dicomDataset: DicomDict2, tag: string, vr: string, value: any) {
   if (!Array.isArray(value)) {
     value = [value];
   }
@@ -50,7 +47,7 @@ export function replaceTag(dicomDataset, tag, vr, value) {
  * @param {any} value
  * @returns {void}
  */
-export function addTag(dicomDataset, tag, value) {
+export function addTag(dicomDataset: DicomDict2, tag: string, value: any) {
   const vr = getTagVr(tag);
   if (!vr) {
     throw new Error(`Could not find matching entry in dictionary for tag ${tag}`);

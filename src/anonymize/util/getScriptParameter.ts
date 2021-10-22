@@ -1,6 +1,4 @@
-/**
- * @typedef {import("../Script").default} Script
- */
+import Script from '../Script';
 
 /**
  * Get value of a parameter defined in the anonymization script
@@ -8,7 +6,7 @@
  * @param {Script["variables"]} variables Script variables
  * @returns {string}
  */
-export default function getScriptParameter(parameter, variables) {
+export default function getScriptParameter(parameter: string, variables: Script['variables']) {
   if (parameter.substr(0, 1) !== '@') {
     throw new Error(`Parameter ${parameter} must start with '@'`);
   }

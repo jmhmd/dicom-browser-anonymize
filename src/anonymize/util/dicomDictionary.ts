@@ -1,11 +1,7 @@
 import dcmjs from 'dcmjs';
+import { Dictionary } from './Dictionary';
 
-/**
- * @typedef {import("./Dictionary").Dictionary} Dictionary
- */
-
-/** @type {Dictionary} */
-const dictionary = dcmjs.data.DicomMetaDictionary.dictionary;
+const dictionary: Dictionary = dcmjs.data.DicomMetaDictionary.dictionary;
 
 const punctuateTag = dcmjs.data.DicomMetaDictionary.punctuateTag;
 const unpunctuateTag = dcmjs.data.DicomMetaDictionary.unpunctuateTag;
@@ -15,7 +11,7 @@ const unpunctuateTag = dcmjs.data.DicomMetaDictionary.unpunctuateTag;
  * @param {string} tag Tag (unpunctuated) to namify
  * @returns {string}
  */
-export function tagToName(tag) {
+export function tagToName(tag: string) {
   const punctuatedTag = punctuateTag(tag);
   const entry = dictionary[punctuatedTag];
   return entry?.name;
@@ -26,7 +22,7 @@ export function tagToName(tag) {
  * @param {string} name DICOM tag name to change to numeric tag
  * @returns {string | undefined}
  */
-export function nameToTag(name) {
+export function nameToTag(name: string): string | undefined {
   const entry = Object.values(dictionary).find((e) => e.name === name);
   if (!entry) return undefined;
   const unpunctuatedTag = unpunctuateTag(entry.tag);
@@ -38,7 +34,7 @@ export function nameToTag(name) {
  * @param {string} tag Tag (unpunctuated) to get VR for
  * @returns {string}
  */
-export function getTagVr(tag) {
+export function getTagVr(tag: string) {
   const punctuatedTag = punctuateTag(tag);
   const entry = dictionary[punctuatedTag];
   return entry.vr;

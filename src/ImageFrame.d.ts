@@ -1,4 +1,4 @@
-type TypedArray =
+export type TypedArray =
   | Int8Array
   | Uint8Array
   | Int16Array
