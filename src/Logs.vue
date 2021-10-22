@@ -1,6 +1,9 @@
 <template>
   <div v-if="!props.expanded" class="text-gray-500">{{ latestMessage }}</div>
-  <div v-else>
+  <div class="w-full" style="height: 5px" v-if="showProgress">
+    <div class="h-full bg-blue-600" :style="`width: ${progressPercent}%`"></div>
+  </div>
+  <div v-if="props.expanded">
     <div v-for="(log, index) in logs">
       <span class="font-bold">{{ log.level }}:</span> {{ log.message }}
       <div v-if="log.sublogs">
@@ -18,10 +21,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { logs, latestMessage } from './logger';
+import { computed, ref } from 'vue';
+import { logs, latestMessage, progressBar } from './logger';
 
 const props = defineProps<{ expanded: boolean }>();
+
+const progressPercent = computed(() => {
+  if (progressBar.value.numTotal === 0) return 0;
+  return (progressBar.value.numDone / progressBar.value.numTotal) * 100;
+});
+
+const showProgress = computed(() => {
+  return progressPercent.value > 0 && progressPercent.value < 100;
+});
 
 const showSublogIndex = ref<null | number>(null);
 </script>

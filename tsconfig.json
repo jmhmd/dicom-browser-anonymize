@@ -13,9 +13,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "allowJs": true,
-    "checkJs": true,
-    "isolatedModules": true
+    "allowJs": true
+    // "checkJs": true,
+    // "isolatedModules": true
   },
   "include": ["./src", "shims-vue.d.ts", "vite-env.d.ts"]
 }

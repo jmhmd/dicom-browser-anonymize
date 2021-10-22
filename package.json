@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.3.3",
+    "@types/dropzone": "^5.7.4",
     "@types/file-saver": "^2.0.3",
     "@types/hammerjs": "^2.0.40",
     "@types/md5": "^2.3.1",

@@ -24,8 +24,8 @@ export default function monitorMemory(element: HTMLElement) {
       <div>Mem Limit: ${memoryLimit}</div>
       <div>Mem Alloc: ${memoryAllocated}</div>
       <div>Mem Used: ${memoryUsed}</div>
-      <div>Min alloc: ${memoryMin && humanFileSize(memoryMin)}</div>
-      <div>Max alloc: ${memoryMax && humanFileSize(memoryMax)}</div>
+      <div>Min: ${memoryMin && humanFileSize(memoryMin)}</div>
+      <div>Max: ${memoryMax && humanFileSize(memoryMax)}</div>
       `;
     }
     return true;

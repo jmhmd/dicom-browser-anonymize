@@ -1,4 +1,4 @@
-import { addLog, updateStatus } from './logger';
+import { addLog, ProgressBar, updateStatus } from './logger';
 // import monitorMemory from './monitorMemory';
 import dcmjs from 'dcmjs';
 import DicomDict2 from './DicomDict2';
@@ -12,7 +12,8 @@ import shouldQuarantine from './shouldQuarantine';
 
 export default async function loadImages(
   imageSources: { urls?: string[]; files?: File[] },
-  studies: Ref<Study[]>
+  studies: Ref<Study[]>,
+  progressBar: ProgressBar
 ) {
   const { urls, files } = imageSources;
   let cornerstoneImageObjects: any[] = [];
@@ -25,6 +26,7 @@ export default async function loadImages(
     urlsAndFiles = urlsAndFiles.concat(files);
   }
 
+  progressBar.value.start(urlsAndFiles.length);
   for (const urlOrFile of urlsAndFiles) {
     let imageId: string;
     let file: File | undefined = undefined;
@@ -59,12 +61,16 @@ export default async function loadImages(
         );
       }
       console.error(err);
+    } finally {
+      progressBar.value.numDone += 1;
     }
   }
 
+  progressBar.value.reset();
   updateStatus(`Loaded: ${cornerstoneImageObjects.length} images.`);
 
-  for (const [index, image] of cornerstoneImageObjects.entries()) {
+  progressBar.value.start(cornerstoneImageObjects.length);
+  for (const image of cornerstoneImageObjects) {
     await aTick();
     let dicomData: DicomDict2;
     const { dicomP10ArrayBuffer } = image;
@@ -129,9 +135,12 @@ export default async function loadImages(
         );
       }
       console.error(err);
+    } finally {
+      progressBar.value.numDone += 1;
     }
   }
 
+  progressBar.value.reset();
   updateStatus(`Parsed: ${cornerstoneImageObjects.length} images.`);
 
   // Sort series instances by instanceNumber

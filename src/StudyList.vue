@@ -29,7 +29,7 @@
                   series.instances.length === 1 ? '' : 's'
                 }}, {{ seriesAnonymizedInstances(series).length }} anonymized)</span
               >
-              <span v-if="seriesFullyAnonymized(series)"> ✔️ </span>
+              <span v-if="seriesFullyAnonymized(series)"> ✓ </span>
             </div>
           </li>
         </ol>
@@ -78,7 +78,9 @@ function seriesFullyAnonymized(series: Series) {
 
 .selected::before {
   /* @apply border rounded-sm border-gray-500 px-2; */
-  content: '▶';
+  content: '➤';
   margin-right: 3px;
+  position: absolute;
+  left: -35px;
 }
 </style>

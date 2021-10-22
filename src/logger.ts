@@ -43,4 +43,23 @@ export function updateStatus(message: string) {
   }
 }
 
-export { logs, status, latestMessage };
+const progressBar = ref({
+  numTotal: 0,
+  numDone: 0,
+  reset() {
+    this.numTotal = 0;
+    this.numDone = 0;
+  },
+  start(numTotal: number) {
+    this.reset();
+    this.numTotal = numTotal;
+  },
+  setProgress(percent: number) {
+    this.numTotal = 100;
+    this.numDone = percent;
+  },
+});
+
+type ProgressBar = typeof progressBar;
+
+export { logs, status, latestMessage, progressBar, ProgressBar };

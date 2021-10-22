@@ -22,7 +22,7 @@
   <div v-else class="bg-green-100 text-green-800 p-2 mb-2">
     Attested no PHI present in images: {{ phiAttestation }}
   </div>
-  <div v-if="phiAttestation" class="btn" @click="emits('next-step')">Next</div>
+  <div v-if="phiAttestation" class="btn btn-primary" @click="emits('next-step')">Next</div>
 </template>
 
 <script setup lang="ts">
