@@ -7,6 +7,9 @@
         <a href="#" @click.prevent="tab = 'anonymization-script'" class="">
           <span>Anonymization Script</span>
         </a>
+        <a href="#" @click.prevent="tab = 'values-histogram'" class="">
+          <span>Header values summary</span>
+        </a>
         <a href="#" @click.prevent="tab = 'about'" class="ml-5">About</a>
       </div>
       <div v-if="tab === 'process-files'" class="flex">
@@ -138,6 +141,9 @@
                 >
                   Anonymize all files
                 </div>
+                <div class="btn mt-5" @click.prevent="anonymizeInstances">
+                  Anonymize all files again
+                </div>
                 <div class="btn btn-primary mt-5" v-if="allSeriesFullyAnonymized" @click="nextStep">
                   Next
                 </div>
@@ -192,6 +198,15 @@
           <pre class="text-xs bg-gray-100 p-2 border">{{
             JSON.stringify(defaultScript, null, 4)
           }}</pre>
+        </div>
+      </div>
+      <div v-if="tab === 'values-histogram'" id="values-histogram" class="relative">
+        <div class="w-full md:w-1/2 mx-auto mt-10">
+          <div class="absolute top-0 right-5">
+            <a href="#" @click.prevent="tab = 'process-files'" class="text-5xl">&#10006;</a>
+          </div>
+          <p class="text-sm">All unique DICOM header values contained in the current datasets:</p>
+          <ValuesHistogram :instances="allInstances"></ValuesHistogram>
         </div>
       </div>
       <div v-if="tab === 'about'" class="relative">
@@ -252,6 +267,7 @@ import writeInstanceToBuffer from './writeInstanceToBuffer';
 import QuarantinedSeriesList from './QuarantinedSeriesList.vue';
 import Dropzone from 'dropzone';
 import Logs from './Logs.vue';
+import ValuesHistogram from './ValuesHistogram.vue';
 
 const fileUrlInput = ref<HTMLInputElement | null>(null);
 const memoryDiv = ref<HTMLElement | null>(null);
