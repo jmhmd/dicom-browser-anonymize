@@ -1,6 +1,6 @@
 import Script from '../Script';
 
-export default function mergeScripts(script1: Script, script2: Script) {
+function mergeScripts(script1: Script, script2: Script) {
   for (const variable of script2.variables) {
     const existing = script1.variables.find((v) => v.name === variable.name);
     if (existing) {
@@ -26,4 +26,16 @@ export default function mergeScripts(script1: Script, script2: Script) {
   script1.options = Object.assign(script1.options, script2.options);
 
   return script1;
+}
+
+export default function loadScripts(scriptsArray: Script[]) {
+  const [baseScript, ...scriptsToMerge] = scriptsArray;
+  let mergedScript = baseScript;
+  for (let script of scriptsToMerge) {
+    mergedScript = mergeScripts(mergedScript, script);
+  }
+  for (let rule of mergedScript.rules) {
+    rule.tag = rule.tag.toUpperCase();
+  }
+  return mergedScript;
 }

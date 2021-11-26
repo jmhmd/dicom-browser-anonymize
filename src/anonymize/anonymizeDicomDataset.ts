@@ -3,7 +3,7 @@ import shouldPreserve from './util/shouldPreserveElement';
 import isPrivateGroup from './util/isPrivateGroup';
 import basicScript from './scripts/header-script.DICOM-PS3.15-Basic';
 import processRule from './processRule';
-import mergeScripts from './util/mergeScripts';
+import loadScripts from './util/loadScripts';
 import { clearLogs, getLogs, log } from './util/logger';
 import DicomDict2 from '../DicomDict2';
 import Script from './Script';
@@ -12,7 +12,7 @@ export default function anonymizeDicomDataset(
   dicomDataset: DicomDict2,
   anonymizationScript: Script
 ) {
-  const script = mergeScripts(basicScript, anonymizationScript);
+  const script = loadScripts([basicScript, anonymizationScript]);
 
   // Loop through all element rules and execute
   for (const rule of script.rules) {

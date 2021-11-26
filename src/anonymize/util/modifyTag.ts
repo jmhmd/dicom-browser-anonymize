@@ -1,6 +1,10 @@
 import { getTagVr } from './dicomDictionary';
 import DicomDict2 from '../../DicomDict2';
 
+function isMetaGroup(tag: string) {
+  return tag.substr(0, 4) === '0002';
+}
+
 /**
  * Remove a tag from the DICOM dataset
  * @param {DicomDict2} dicomDataset Parsed DICOM dataset
@@ -8,7 +12,13 @@ import DicomDict2 from '../../DicomDict2';
  * @returns {void}
  */
 export function removeTag(dicomDataset: DicomDict2, tag: string) {
-  delete dicomDataset.dict[tag];
+  if (dicomDataset.dict[tag]) {
+    delete dicomDataset.dict[tag];
+  } else if (dicomDataset.meta[tag]) {
+    delete dicomDataset.meta[tag];
+  } else {
+    throw new Error(`Unable to remove tag ${tag}, not found in dataset dict or meta.`);
+  }
   return;
 }
 
@@ -20,7 +30,16 @@ export function removeTag(dicomDataset: DicomDict2, tag: string) {
  * @returns {void}
  */
 export function emptyTag(dicomDataset: DicomDict2, tag: string, vr: string) {
-  dicomDataset.upsertTag(tag, vr, ['']);
+  if (isMetaGroup(tag)) {
+    if (dicomDataset.meta[tag]) {
+      dicomDataset.meta[tag].Value = [''];
+    } else {
+      const vr = getTagVr(tag);
+      dicomDataset.meta[tag] = { vr, Value: [''] };
+    }
+  } else {
+    dicomDataset.upsertTag(tag, vr, ['']);
+  }
   return;
 }
 
@@ -36,7 +55,16 @@ export function replaceTag(dicomDataset: DicomDict2, tag: string, vr: string, va
   if (!Array.isArray(value)) {
     value = [value];
   }
-  dicomDataset.upsertTag(tag, vr, value);
+  if (isMetaGroup(tag)) {
+    if (dicomDataset.meta[tag]) {
+      dicomDataset.meta[tag].Value = value;
+    } else {
+      const vr = getTagVr(tag);
+      dicomDataset.meta[tag] = { vr, Value: value };
+    }
+  } else {
+    dicomDataset.upsertTag(tag, vr, value);
+  }
   return;
 }
 
