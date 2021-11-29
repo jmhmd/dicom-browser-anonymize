@@ -4,13 +4,13 @@
       <h1 class="text-xl font-bold">In browser DICOM anonymization</h1>
 
       <div class="flex justify-end">
-        <a href="#" @click.prevent="tab = 'anonymization-script'" class="">
+        <a href="#" @click.prevent="tab = 'anonymization-script'" class="mx-2">
           <span>Anonymization Script</span>
         </a>
-        <a href="#" @click.prevent="tab = 'values-histogram'" class="">
+        <a href="#" @click.prevent="tab = 'values-histogram'" class="mx-2">
           <span>Header values summary</span>
         </a>
-        <a href="#" @click.prevent="tab = 'about'" class="ml-5">About</a>
+        <a href="#" @click.prevent="tab = 'about'" class="mx-2">About</a>
       </div>
       <div v-if="tab === 'process-files'" class="flex">
         <div class="w-1/2 pr-5">
@@ -98,6 +98,11 @@
               <div class="section-overlay" v-if="step !== 'anonymize'"></div>
               <h3 class="section-head">3. Anonymize files</h3>
               <div class="section-content">
+                <div class="my-5">
+                  <a href="#" @click.prevent="tab = 'anonymization-script'"
+                    >Show full default anonymization script</a
+                  >
+                </div>
                 <div class="shadow-inner bg-gray-100 p-2">
                   <span class="text-sm text-gray-600">Anonymizer options:</span>
                   <div class="flex flex-wrap">
@@ -141,16 +146,16 @@
                 >
                   Anonymize all files
                 </div>
-                <div class="btn mt-5" @click.prevent="anonymizeInstances">
-                  Anonymize all files again
+                <div>
+                  <a href="#" @click.prevent="tab = 'values-histogram'"
+                    >Show summary of DICOM header values</a
+                  >
                 </div>
+                <!-- <div class="btn mt-5" @click.prevent="anonymizeInstances">
+                  Anonymize all files again
+                </div> -->
                 <div class="btn btn-primary mt-5" v-if="allSeriesFullyAnonymized" @click="nextStep">
                   Next
-                </div>
-                <div class="my-5 float-right">
-                  <a href="#" @click.prevent="tab = 'anonymization-script'"
-                    >Show full default anonymization script</a
-                  >
                 </div>
               </div>
             </section>
